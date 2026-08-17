@@ -4,3 +4,5 @@ Static partner deck + interactive demo. **All data is synthetic** — no real pa
 
 - `index.html` — the deck (English)
 - `demo2.html` — the interactive demo (linked from the deck)
+
+Steven YI

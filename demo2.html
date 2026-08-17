@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlgoPharma | Insurance & Special Authorization Workflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --ink:#111827; --muted:#6B7280; --bg:#FAFAFA; --surface:#FFFFFF; --line:#E5E7EB;
+  --primary:#00695C; --primary-soft:#E0F2F1; --primary-dark:#004D40;
+  --teal:#00695C; --teal-soft:#E0F2F1; --blue:#3B82F6;
+  --ok:#10B981; --ok-soft:#ECFDF5; --warn:#CA8A04; --warn-soft:#FEF9C3;
+  --orange:#F59E0B; --orange-soft:#FFF7ED; --danger:#EF4444; --danger-soft:#FEE2E2;
+  --gray:#6B7280; --gray-soft:#F3F4F6;
+  --r-md:12px; --r-lg:16px; --r-xl:24px;
+  --shadow:0 4px 6px -1px rgba(0,0,0,.05); --shadow-lg:0 20px 25px -5px rgba(0,0,0,.08);
+  --tr:.2s cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;outline:none}
+/* fixed-viewport app shell: panes scroll internally, the page itself never does.
+   Also stops the off-canvas case drawer from being draggable into view sideways. */
+html{height:100%;overflow:hidden}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+button{font-family:inherit}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:5px}::-webkit-scrollbar-track{background:transparent}
+
+/* ===== Global synthetic banner ===== */
+.syn-banner{background:#FFFBEB;border-bottom:1px solid #FDE68A;color:#92400E;font-size:.74rem;font-weight:600;text-align:center;padding:5px 12px;flex-shrink:0;z-index:60}
+.syn-banner i{margin-right:6px}
+
+/* ===== Layout ===== */
+.app{display:flex;flex:1;min-height:0}
+.sidebar{width:80px;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:22px 0;flex-shrink:0;z-index:50}
+.brand-mark{width:40px;height:40px;color:var(--primary);font-size:1.5rem;display:flex;align-items:center;justify-content:center;margin-bottom:32px}
+.nav{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.nav-it{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9CA3AF;cursor:pointer;transition:var(--tr);position:relative}
+.nav-it i{font-size:1.05rem}
+.nav-it:hover,.nav-it.active{background:var(--primary-soft);color:var(--primary)}
+.nav-it::after{content:attr(data-tooltip);position:absolute;left:60px;background:#1F2937;color:#fff;padding:6px 12px;border-radius:6px;font-size:.72rem;font-weight:600;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap;z-index:400}
+.nav-it:hover::after{opacity:1}
+.nav-badge{position:absolute;top:3px;right:3px;background:var(--primary);color:#fff;border-radius:10px;padding:0 5px;font-size:.58rem;font-weight:800;min-width:17px;height:16px;line-height:16px;text-align:center}
+
+/* ===== Topbar ===== */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 20px;flex-shrink:0}
+.store-pill{font-size:.76rem;color:var(--muted);font-weight:600}
+.store-pill i{color:var(--teal);margin-right:6px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.role-pill{display:flex;align-items:center;gap:8px;background:var(--gray-soft);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:.76rem;font-weight:600}
+.role-pill select{border:none;background:transparent;font-family:inherit;font-weight:600;font-size:.76rem;cursor:pointer;color:var(--ink)}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600}
+
+/* ===== Pages ===== */
+.pages{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.page{display:none;flex:1;min-height:0;overflow-y:auto;padding:24px 26px}
+.page.active{display:block;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.page-head{margin-bottom:18px}
+.page-head h1{font-size:1.85rem;letter-spacing:-.6px;font-weight:700}
+.page-head h1 i{color:var(--primary);margin-right:12px}
+.page-head p{color:var(--muted);font-size:.85rem;margin-top:5px;margin-left:44px;max-width:900px;line-height:1.55}
+.foot{border-top:1px solid var(--line);background:var(--surface);padding:8px 20px;font-size:.66rem;color:var(--muted);line-height:1.5;flex-shrink:0}
+
+/* ===== Buttons / inputs / chips ===== */
+.btn{border:none;cursor:pointer;border-radius:100px;font-weight:700;font-size:.8rem;padding:10px 18px;display:inline-flex;align-items:center;gap:8px;transition:var(--tr)}
+.btn-pri{background:var(--primary);color:#fff}
+.btn-pri:hover{background:var(--primary-dark)}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--danger-soft);color:var(--danger);border:1px solid #FECACA}
+.btn-sm{padding:6px 14px;font-size:.72rem}
+.inp{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:.83rem;font-family:inherit;background:#fff;transition:var(--tr)}
+.inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px #E0E7FF}
+.lbl{font-weight:600;font-size:.74rem;display:block;margin-bottom:5px;color:#334155}
+.err{color:var(--danger);font-size:.72rem;font-weight:600;margin-top:4px;display:none}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:6px;margin:0 4px 4px 0;white-space:nowrap}
+.c-blue{background:#DBEAFE;color:#1E40AF}.c-teal{background:#CCFBF1;color:#0F766E}
+.c-yellow{background:var(--warn-soft);color:#854D0E}.c-orange{background:var(--orange-soft);color:#9A3412}
+.c-red{background:var(--danger-soft);color:#991B1B}.c-green{background:var(--ok-soft);color:#166534}
+.c-gray{background:var(--gray-soft);color:#475569}.c-indigo{background:var(--primary-soft);color:var(--primary-dark)}
+.avat{width:24px;height:24px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;flex-shrink:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow)}
+.card-title{font-weight:700;font-size:.92rem;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.card-title i{color:var(--primary)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:.82rem}
+.empty i{font-size:1.8rem;display:block;margin-bottom:10px;color:#CBD5E1}
+
+/* tooltips */
+[data-tip]{position:relative;cursor:help;border-bottom:1px dotted #94A3B8}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:0;background:#1E293B;color:#fff;font-size:.68rem;font-weight:500;padding:6px 10px;border-radius:6px;white-space:normal;width:220px;z-index:500;line-height:1.4}
+
+/* ===== Dashboard ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;transition:var(--tr);display:flex;gap:14px;align-items:center;box-shadow:var(--shadow)}
+.stat:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.stat-ic{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.stat-n{font-size:1.55rem;font-weight:800;line-height:1.05}
+.stat-l{font-size:.72rem;color:var(--muted);font-weight:600;margin-top:2px}
+.stat-link{font-size:.66rem;color:var(--primary);font-weight:700;margin-top:3px}
+.wf-strip{display:flex;gap:0;overflow-x:auto;padding:14px 4px}
+.wf-step{display:flex;align-items:center;flex-shrink:0}
+.wf-box{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:.7rem;font-weight:700;color:#334155;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.wf-box i{color:var(--teal)}
+.wf-arrow{color:#94A3B8;padding:0 7px;font-size:.75rem}
+.dash-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:14px}
+.pos-list{font-size:.78rem;color:#334155;line-height:1.6}
+.pos-list li{margin-left:18px;margin-bottom:2px}
+
+/* ============================================================
+   === HERO + PRODUCT-UI CAROUSEL (dashboard) =================
+   ============================================================ */
+.hero{text-align:center;padding:26px 20px 30px;max-width:900px;margin:0 auto}
+.hero .hero-pill{display:inline-flex;align-items:center;gap:8px;background:var(--primary-soft);color:var(--primary-dark);
+  border-radius:100px;padding:6px 16px;font-size:.74rem;font-weight:700;margin-bottom:20px}
+.hero h1{font-size:2.35rem;line-height:1.16;letter-spacing:-1.1px;font-weight:800;margin-bottom:14px;text-wrap:balance}
+.hero h1 .accent{color:var(--primary)}
+.hero p.hero-sub{color:var(--muted);font-size:1rem;line-height:1.6;max-width:680px;margin:0 auto 26px}
+.hero-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* --- the app-window frame --- */
+.hc{
+  position:relative;max-width:1120px;margin:8px auto 30px;border-radius:26px;padding:13px;
+  background:linear-gradient(150deg,#0B3B36 0%,#12433D 45%,#0A302C 100%);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 30px 70px -20px rgba(0,105,92,.45),0 0 0 1px rgba(0,105,92,.08),0 10px 30px rgba(15,23,42,.14);
+  transition:box-shadow .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1);
+  opacity:0;transform:translateY(26px) scale(.965);
+}
+.hc.in{opacity:1;transform:none;animation:hcIn .9s cubic-bezier(.16,1,.3,1)}
+@keyframes hcIn{from{opacity:0;transform:translateY(26px) scale(.965)}to{opacity:1;transform:none}}
+/* hover intensifies the glow */
+.hc:hover{box-shadow:0 36px 90px -18px rgba(0,105,92,.62),0 0 0 1px rgba(0,105,92,.22),0 0 46px rgba(16,185,129,.28);transform:translateY(-3px)}
+
+/* window chrome */
+.hc-bar{display:flex;align-items:center;gap:9px;padding:2px 6px 11px}
+.hc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hc-tabs{display:flex;gap:5px;margin-left:10px;flex-wrap:wrap}
+.hc-tab{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.5);padding:4px 12px;border-radius:100px;
+  cursor:pointer;transition:var(--tr);white-space:nowrap;border:1px solid transparent}
+.hc-tab:hover{color:#fff;background:rgba(255,255,255,.08)}
+.hc-tab.on{color:#fff;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.18)}
+.hc-live{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.62rem;font-weight:700;
+  color:rgba(255,255,255,.55);letter-spacing:.5px;padding-right:4px}
+.hc-live i{color:#34D399;font-size:.5rem;animation:hcPulse 2.2s ease-in-out infinite}
+@keyframes hcPulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* the screen */
+.hc-screen{position:relative;background:#F7FAF9;border-radius:16px;overflow:hidden;height:400px;
+  border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.hc-slide{position:absolute;inset:0;opacity:0;transform:translateX(18px) scale(.995);pointer-events:none;
+  /* leaving slide clears quickly so the two mockups never muddle together */
+  transition:opacity .3s ease-in,transform .5s cubic-bezier(.4,0,.2,1);
+  padding:18px 20px;overflow:hidden}
+.hc-slide.on{opacity:1;transform:none;pointer-events:auto;
+  transition:opacity .5s ease-out .2s,transform .6s cubic-bezier(.16,1,.3,1) .12s}
+/* gentle breathing on the active slide's content */
+.hc-slide.on .hc-body{animation:hcFloat 7s ease-in-out infinite}
+@keyframes hcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.hc-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.hc-head i{color:var(--primary)}
+.hc-head b{font-size:.9rem}
+.hc-head span{font-size:.7rem;color:var(--muted)}
+
+/* pagination dots */
+.hc-dots{display:flex;justify-content:center;gap:8px;padding:13px 0 3px}
+.hc-dots button{width:8px;height:8px;border-radius:50%;border:none;cursor:pointer;padding:0;
+  background:rgba(255,255,255,.28);transition:var(--tr)}
+.hc-dots button:hover{background:rgba(255,255,255,.55)}
+.hc-dots button.on{background:#5EEAD4;width:26px;border-radius:5px}
+
+/* --- mockup primitives used inside the slides --- */
+.mk{background:#fff;border:1px solid var(--line);border-radius:10px}
+.mk-row{display:flex;align-items:center;gap:8px;font-size:.72rem}
+.mk-chip{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.mk-col{background:var(--gray-soft);border:1px solid var(--line);border-radius:9px;padding:7px;min-width:0}
+.mk-colhead{display:flex;align-items:center;gap:6px;font-size:.58rem;font-weight:800;margin-bottom:6px;color:#374151}
+.mk-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.mk-card:last-child{margin-bottom:0}
+.mk-id{font-size:.54rem;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.mk-drug{font-size:.72rem;font-weight:700;margin:1px 0}
+.mk-sub{font-size:.58rem;color:var(--muted)}
+.mk-avat{width:17px;height:17px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;
+  justify-content:center;font-size:.48rem;font-weight:800;flex-shrink:0}
+.mk-bar{height:5px;border-radius:3px;background:var(--gray-soft);overflow:hidden}
+.mk-bar div{height:100%;border-radius:3px}
+
+@media (max-width:1100px){
+  .hero h1{font-size:2rem}
+  .hc-screen{height:auto;min-height:430px}
+  .hc-slide{position:relative;display:none}
+  .hc-slide.on{display:block}
+}
+/* On narrow screens keep the mockup at its designed width and let the
+   *screen* scroll horizontally — squashing it would stop looking like a product. */
+@media (max-width:820px){
+  .hc{padding:9px;border-radius:20px}
+  .hc-tabs{display:none}
+  .hc-screen{overflow-x:auto;overflow-y:hidden}
+  .hc-body{min-width:660px}
+  .hc-slide{padding:14px}
+  /* dashboard grids were desktop-only; collapse them so the page never scrolls sideways */
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .dash-grid{grid-template-columns:1fr}
+  .page{padding:18px 14px}
+}
+@media (max-width:520px){
+  .stat-grid{grid-template-columns:1fr}
+}
+
+/* ===== Coverage ===== */
+.cov-grid{display:grid;grid-template-columns:390px 1fr;gap:16px}
+.cov-hero{border-radius:var(--r-lg);padding:18px 20px;border:1px solid;margin-bottom:14px;animation:fadeIn .3s}
+.cov-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.doc-check{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;margin-bottom:7px;background:#fff;font-size:.8rem;transition:var(--tr)}
+.doc-check.done{opacity:.5}.doc-check.done span{text-decoration:line-through}
+.src-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:.78rem}
+.src-row:last-child{border:none}
+.src-row b{text-align:right;max-width:60%}
+.tbl{width:100%;border-collapse:collapse;font-size:.78rem}
+.tbl th{text-align:left;padding:9px 12px;background:var(--gray-soft);font-size:.64rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);position:sticky;top:0;border-bottom:1px solid var(--line);z-index:2}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tbody tr{transition:background .15s}
+.tbl tbody tr:hover{background:var(--primary-soft)}
+.gen-steps{max-width:320px;margin:0 auto;text-align:left;font-size:.8rem;color:var(--muted)}
+.gen-step{display:flex;gap:9px;align-items:center;margin-bottom:7px;opacity:.45}
+.gen-step.on{opacity:1;color:var(--ink);font-weight:600}
+.gen-step.done{opacity:1;color:var(--ok)}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{100%{transform:rotate(360deg)}}
+
+/* ===== Kanban ===== */
+.kb-filters{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.filter-chip{display:inline-flex;align-items:center;gap:7px;background:var(--primary-soft);color:var(--primary-dark);border:1px solid #C7D2FE;border-radius:20px;padding:4px 12px;font-size:.74rem;font-weight:700}
+.filter-chip i{cursor:pointer}
+.kb{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start;height:calc(100% - 90px)}
+.kb-col{min-width:262px;width:262px;background:var(--gray-soft);border:1px solid var(--line);border-radius:var(--r-md);flex-shrink:0;display:flex;flex-direction:column;max-height:100%}
+.kb-head{padding:10px 12px;font-size:.72rem;font-weight:800;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--line)}
+.kb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kb-n{margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 7px;font-size:.66rem;color:var(--muted)}
+.kb-body{padding:8px;overflow-y:auto;min-height:80px;transition:background .2s;border-radius:0 0 var(--r-md) var(--r-md)}
+.kb-body.over{background:var(--primary-soft);box-shadow:inset 0 0 0 2px var(--primary)}
+.kcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:grab;transition:var(--tr);position:relative}
+.kcard:hover{border-color:var(--primary);box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.kcard.drag{opacity:.4;transform:rotate(2deg)}
+.kc-id{font-size:.64rem;font-weight:800;color:var(--muted);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px}
+.kc-drug{font-weight:700;font-size:.85rem}
+.kc-sub{font-size:.7rem;color:var(--muted);margin:2px 0 7px}
+.kc-next{font-size:.68rem;background:var(--gray-soft);border-radius:6px;padding:4px 7px;color:#334155;margin-bottom:7px}
+.kc-next i{color:var(--teal);margin-right:4px}
+.kc-foot{display:flex;align-items:center;justify-content:space-between;font-size:.66rem;color:var(--muted)}
+.risk-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(13,148,136,.5)}70%{box-shadow:0 0 0 12px rgba(13,148,136,0)}100%{box-shadow:none}}
+.flash{animation:flash 1s ease-out 2;border-color:var(--teal)!important}
+.kc-risk{display:inline-flex;align-items:center;gap:5px;font-size:.64rem;font-weight:800;padding:3px 9px;border-radius:6px;cursor:help}
+#riskPop{position:fixed;z-index:1500;background:#1F2937;color:#fff;border-radius:10px;padding:11px 13px;font-size:.72rem;line-height:1.6;width:280px;box-shadow:var(--shadow-lg);display:none;pointer-events:none}
+#riskPop b{color:#5EEAD4;display:block;margin-bottom:4px}
+
+/* ===== Risk queue ===== */
+.risk-row{background:#fff;border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:13px 16px;margin-bottom:9px;display:flex;gap:14px;align-items:center;cursor:pointer;transition:var(--tr);flex-wrap:wrap}
+.risk-row:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.hz{padding:5px 12px;border-radius:18px;border:1px solid var(--line);background:#fff;font-size:.72rem;font-weight:700;color:var(--muted);cursor:pointer;transition:var(--tr)}
+.hz:hover{border-color:var(--primary);color:var(--primary)}
+.hz.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* ===== Drawer (case detail) ===== */
+.ovl{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:890;display:none;backdrop-filter:blur(2px)}
+.ovl.open{display:block;animation:fadeIn .2s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:780px;max-width:96vw;background:var(--bg);z-index:900;transform:translateX(105%);transition:transform .28s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(15,23,42,.2)}
+.drawer.open{transform:none}
+.dw-head{background:var(--surface);border-bottom:1px solid var(--line);padding:16px 22px}
+.dw-tabs{display:flex;gap:2px;background:var(--surface);border-bottom:1px solid var(--line);padding:0 14px;overflow-x:auto}
+.dw-tab{padding:11px 13px;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:var(--tr);display:flex;gap:6px;align-items:center}
+.dw-tab:hover{color:var(--primary)}
+.dw-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.dw-body{flex:1;overflow-y:auto;padding:18px 22px}
+.dw-pane{display:none}.dw-pane.active{display:block;animation:fadeIn .2s}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+.ov-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem}
+.ov-row span:first-child{color:var(--muted);font-weight:600}
+.ov-row b{text-align:right}
+.nba{background:linear-gradient(135deg,var(--primary-soft),var(--teal-soft));border:1px solid #C7D2FE;border-radius:var(--r-md);padding:14px 16px;margin-bottom:16px}
+.doc-item{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:7px;font-size:.8rem}
+.task-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-bottom:7px;font-size:.8rem}
+.task-item.done{opacity:.55}.task-item.done .tt{text-decoration:line-through}
+.comm-item{display:flex;gap:11px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-bottom:8px;font-size:.78rem}
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--line)}
+.tl-it{position:relative;padding-bottom:14px;font-size:.78rem}
+.tl-it::before{content:'';position:absolute;left:-19px;top:3px;width:10px;height:10px;border-radius:50%;background:#fff;border:3px solid var(--primary)}
+.tl-it.mut::before{border-color:#CBD5E1}
+.ms{display:flex;gap:0;margin:12px 0;overflow-x:auto}
+.ms-it{flex:1;min-width:96px;text-align:center;position:relative;padding-top:20px;font-size:.66rem;color:var(--muted)}
+.ms-it::before{content:'';position:absolute;top:4px;left:50%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:#E2E8F0;border:2px solid #CBD5E1}
+.ms-it::after{content:'';position:absolute;top:9px;left:calc(50% + 8px);right:calc(-50% + 8px);height:2px;background:var(--line)}
+.ms-it:last-child::after{display:none}
+.ms-it.done::before{background:var(--ok);border-color:var(--ok)}
+.ms-it.now::before{background:var(--orange);border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-soft)}
+
+/* ===== Modals ===== */
+.modal-ovl{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal-ovl.open{display:flex;animation:fadeIn .2s}
+.modal{background:#fff;border-radius:var(--r-xl);width:520px;max-width:92vw;max-height:86vh;overflow-y:auto;padding:26px;box-shadow:var(--shadow-lg);animation:pop .25s cubic-bezier(.16,1,.3,1)}
+@keyframes pop{from{transform:translateY(14px) scale(.98);opacity:0}to{opacity:1}}
+
+/* ===== Reports ===== */
+.rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bar-wrap{display:flex;align-items:flex-end;gap:10px;height:170px;padding-top:20px}
+.rep-bar{width:70%;max-width:40px;border-radius:7px 7px 0 0;height:4px;transition:height .8s cubic-bezier(.16,1,.3,1)}
+.mini-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:.78rem}
+.mini-row:last-child{border:none}
+.meter{height:7px;border-radius:4px;background:var(--gray-soft);overflow:hidden;margin-top:5px}
+.meter div{height:100%;border-radius:4px;width:0;transition:width .9s ease-out}
+
+/* ===== Toasts ===== */
+.toasts{position:fixed;bottom:22px;right:96px;z-index:2600;display:flex;flex-direction:column;gap:9px;pointer-events:none}
+.toast{background:#1E293B;color:#fff;padding:11px 18px;border-radius:10px;font-size:.8rem;font-weight:600;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow-lg);animation:slideL .3s cubic-bezier(.16,1,.3,1);max-width:420px;pointer-events:auto}
+@keyframes slideL{from{transform:translateX(60px);opacity:0}to{opacity:1}}
+
+/* ===== AI assistant ===== */
+.ai-fab{position:fixed;bottom:20px;right:20px;width:54px;height:54px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:1.25rem;cursor:pointer;z-index:2400;box-shadow:0 10px 24px rgba(0,105,92,.35);transition:var(--tr);display:flex;align-items:center;justify-content:center}
+.ai-fab:hover{background:var(--primary-dark)}
+.ai-fab:hover{transform:scale(1.07)}
+.ai-dot{position:absolute;top:2px;right:2px;width:11px;height:11px;border-radius:50%;background:var(--danger);border:2px solid #fff}
+.ai-win{position:fixed;bottom:84px;right:20px;width:400px;max-width:calc(100vw - 40px);height:560px;max-height:calc(100vh - 120px);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);z-index:2500;display:none;flex-direction:column;overflow:hidden}
+.ai-win.open{display:flex;animation:pop .25s}
+.ai-head{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:13px 15px;display:flex;align-items:center;gap:11px}
+.ai-msgs{flex:1;overflow-y:auto;padding:14px;background:var(--bg)}
+.ai-m{margin-bottom:11px;display:flex}
+.ai-m.user{justify-content:flex-end}
+.ai-b{max-width:88%;padding:9px 13px;border-radius:13px;font-size:.8rem;line-height:1.55;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+.ai-m.user .ai-b{background:var(--primary);color:#fff;border-color:var(--primary);border-bottom-left-radius:13px;border-bottom-right-radius:4px}
+.ai-act{display:inline-flex;align-items:center;gap:6px;margin:7px 5px 0 0;padding:5px 11px;border-radius:16px;background:var(--primary-soft);color:var(--primary-dark);font-size:.7rem;font-weight:700;cursor:pointer;border:1px solid transparent;transition:var(--tr)}
+.ai-act:hover{border-color:var(--primary);background:#fff}
+.ai-sugg{padding:5px 11px;border-radius:16px;border:1px solid var(--line);background:#fff;font-size:.7rem;font-weight:600;cursor:pointer;transition:var(--tr);display:inline-block;margin:3px 3px 0 0}
+.ai-sugg:hover{border-color:var(--primary);color:var(--primary)}
+.ai-inrow{padding:11px;border-top:1px solid var(--line);display:flex;gap:8px;background:#fff}
+.ai-typing span{width:6px;height:6px;background:#94A3B8;border-radius:50%;display:inline-block;margin-right:3px;animation:bnc 1s infinite}
+.ai-typing span:nth-child(2){animation-delay:.15s}.ai-typing span:nth-child(3){animation-delay:.3s}
+@keyframes bnc{0%,60%,100%{transform:none}30%{transform:translateY(-4px)}}
+
+/* ===== Guided tour ===== */
+.tour{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:500px;max-width:94vw;background:#1E293B;color:#fff;border-radius:15px;padding:18px 20px;z-index:3000;box-shadow:var(--shadow-lg);display:none}
+.tour.show{display:block;animation:pop .3s}
+.tour-dots{display:flex;gap:4px;flex-wrap:wrap}
+.tour-dots span{width:6px;height:6px;border-radius:50%;background:#475569;transition:background .2s}
+.tour-dots span.on{background:var(--ok)}
+.hl{position:relative;z-index:2500;box-shadow:0 0 0 3px var(--ok),0 0 0 8px rgba(16,185,129,.25)!important;border-radius:10px}
+</style>
+</head>
+<body>
+
+<div class="syn-banner"><i class="fas fa-flask"></i>Synthetic demo data only — not connected to a pharmacy, insurer, patient record, or clinical system.</div>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand-mark" title="AlgoPharma — Insurance &amp; SA Workflow"><i class="fas fa-staff-snake"></i></div>
+    <nav class="nav" id="nav">
+      <div class="nav-it active" data-page="dashboard" data-tooltip="Dashboard"><i class="fas fa-house-chimney"></i></div>
+      <div class="nav-it" data-page="workspace" data-tooltip="Case Workspace"><i class="fas fa-table-columns"></i><span class="nav-badge" id="bWs">0</span></div>
+      <div class="nav-it" data-page="reports" data-tooltip="Reports &amp; Audit"><i class="fas fa-chart-column"></i></div>
+    </nav>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <div class="topbar">
+      <span class="store-pill"><i class="fas fa-store"></i>Main Street Pharmacy · Store #001 (demo)</span>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="tourStart()" style="border-color:var(--ok);color:#065F46;background:var(--ok-soft)"><i class="fas fa-circle-play"></i> Quick Demo</button>
+        <div class="role-pill"><i class="fas fa-user-lock" style="color:var(--primary)"></i>
+          <select id="roleSel" onchange="setRole(this.value)">
+            <option value="pharmacist">Role: Pharmacist</option>
+            <option value="technician">Role: Technician</option>
+            <option value="billing">Role: Billing Coordinator</option>
+            <option value="manager">Role: Manager</option>
+          </select>
+        </div>
+        <div class="user-chip"><span class="avat" id="userAvat" style="background:#4F46E5">PS</span><span id="userName">Priya Shah</span></div>
+      </div>
+    </div>
+
+    <div class="pages">
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <!-- ===== HERO ===== -->
+        <div class="hero">
+          <div class="hero-pill"><i class="fas fa-plug"></i> Works alongside your existing pharmacy and insurer tools</div>
+          <h1>Insurance &amp; Special Authorization Workflow,<br><span class="accent">in one place.</span></h1>
+          <p class="hero-sub">Organize complex prescription access work across coverage checks, documents, tasks, insurer follow-up, and authorization expiry.</p>
+          <div class="hero-cta">
+            <button class="btn btn-pri" onclick="intakeOpen()"><i class="fas fa-cash-register"></i> New case — coverage check</button>
+            <button class="btn btn-pri" onclick="WS_FILTER=null;go('workspace')" style="background:#fff;color:var(--primary);border:1.5px solid var(--primary)"><i class="fas fa-table-columns"></i> Open case workspace</button>
+            <button class="btn btn-ghost" onclick="tourStart()" style="border-color:var(--ok);color:#065F46;background:var(--ok-soft)"><i class="fas fa-circle-play"></i> Start guided demo</button>
+            <button class="btn btn-ghost" onclick="WS_FILTER='expiring';go('workspace')"><i class="fas fa-triangle-exclamation"></i> View expiry risks</button>
+            <button class="btn btn-ghost" onclick="go('reports')"><i class="fas fa-chart-column"></i> View reports</button>
+          </div>
+        </div>
+
+        <!-- ===== PRODUCT-UI CAROUSEL ===== -->
+        <div class="hc" id="hc" onmouseenter="hcPause()" onmouseleave="hcResume()">
+          <div class="hc-bar">
+            <span class="hc-dot" style="background:#FF5F57"></span>
+            <span class="hc-dot" style="background:#FEBC2E"></span>
+            <span class="hc-dot" style="background:#28C840"></span>
+            <div class="hc-tabs" id="hcTabs">
+              <div class="hc-tab on" onclick="hcGo(0,true)">Coverage &amp; Access</div>
+              <div class="hc-tab" onclick="hcGo(1,true)">Case Workspace</div>
+              <div class="hc-tab" onclick="hcGo(2,true)">Authorization Lifecycle</div>
+            </div>
+            <div class="hc-live"><i class="fas fa-circle"></i> SYNTHETIC DEMO</div>
+          </div>
+
+          <div class="hc-screen">
+
+            <!-- SLIDE 1 — Coverage & Access -->
+            <div class="hc-slide on" data-hc="0">
+              <div class="hc-body">
+                <div class="hc-head">
+                  <i class="fas fa-magnifying-glass-dollar"></i>
+                  <b>Coverage &amp; Access</b>
+                  <span>— CASE-2026-1043 · Drug C · Alberta public plan (synthetic)</span>
+                </div>
+                <div style="border-radius:12px;padding:13px 15px;background:var(--orange-soft);border:1px solid #FED7AA;margin-bottom:12px">
+                  <div style="display:flex;gap:11px;align-items:flex-start">
+                    <div style="width:34px;height:34px;border-radius:9px;background:#fff;color:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-file-signature"></i></div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:.55rem;font-weight:800;color:var(--orange);letter-spacing:.5px">DRUG C · PUBLIC PLAN (ALBERTA) · SYNTHETIC</div>
+                      <div style="font-size:.92rem;font-weight:800;color:var(--orange);margin:1px 0 3px">Special authorization may be required</div>
+                      <div style="font-size:.68rem;color:#7C2D12;line-height:1.45">Based on the available demo rule, this medication may require special authorization with specialist involvement.</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+                  <div class="mk" style="padding:11px">
+                    <div style="font-size:.7rem;font-weight:700;margin-bottom:7px"><i class="fas fa-file-circle-check" style="color:var(--primary)"></i> Document checklist</div>
+                    <div class="mk-row" style="padding:4px 0;border-bottom:1px solid var(--line)"><i class="fas fa-circle-check" style="color:var(--ok)"></i><span style="flex:1;text-decoration:line-through;opacity:.6">Special-authorization form</span><span class="mk-chip c-green">On file</span></div>
+                    <div class="mk-row" style="padding:4px 0;border-bottom:1px solid var(--line)"><i class="fas fa-circle-check" style="color:var(--ok)"></i><span style="flex:1;text-decoration:line-through;opacity:.6">Specialist consultation letter</span><span class="mk-chip c-green">On file</span></div>
+                    <div class="mk-row" style="padding:4px 0;border-bottom:1px solid var(--line)"><i class="far fa-circle" style="color:#CBD5E1"></i><span style="flex:1">Baseline lab report</span><span class="mk-chip c-yellow">To collect</span></div>
+                    <div class="mk-row" style="padding:4px 0"><i class="far fa-circle" style="color:#CBD5E1"></i><span style="flex:1">Patient consent</span><span class="mk-chip c-yellow">To collect</span></div>
+                    <div style="margin-top:9px"><div class="mk-bar"><div style="width:50%;background:var(--ok)"></div></div>
+                    <div style="font-size:.58rem;color:var(--muted);margin-top:4px">2 of 4 documents on file — updates automatically as they arrive</div></div>
+                  </div>
+                  <div class="mk" style="padding:11px">
+                    <div style="font-size:.7rem;font-weight:700;margin-bottom:7px"><i class="fas fa-book-bookmark" style="color:var(--primary)"></i> Rule source &amp; verification</div>
+                    <div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">Source</span><b style="text-align:right;font-size:.64rem">Alberta Synthetic Specialty Criteria</b></div>
+                    <div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">Rule version</span><b>2026-05</b></div>
+                    <div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">Effective date</span><b>May 1, 2026</b></div>
+                    <div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">Last human review</span><b>Jul 22, 2026</b></div>
+                    <div class="mk-row" style="justify-content:space-between;padding:4px 0"><span style="color:var(--muted)">Reviewer</span><b style="font-size:.64rem">Compliance team</b></div>
+                    <div style="margin-top:8px"><span class="mk-chip c-green"><i class="fas fa-user-check"></i> Verified demo rule</span></div>
+                  </div>
+                </div>
+                <div style="margin-top:10px;font-size:.6rem;color:var(--muted);background:var(--gray-soft);border-radius:8px;padding:7px 10px;line-height:1.5">
+                  <i class="fas fa-scale-balanced"></i> Subject to patient eligibility, plan terms and the insurer's final determination — administrative information only, not clinical advice.
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE 2 — Case Workspace -->
+            <div class="hc-slide" data-hc="1">
+              <div class="hc-body">
+                <div class="hc-head">
+                  <i class="fas fa-table-columns"></i>
+                  <b>Special Authorization Case Workspace</b>
+                  <span>— 24 open cases · drag between stages · de-identified references only</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">
+                  <div class="mk-col">
+                    <div class="mk-colhead"><span class="risk-dot" style="background:#F59E0B"></span>GATHERING INFO<span style="margin-left:auto;color:var(--muted)">6</span></div>
+                    <div class="mk-card"><div class="mk-id">CASE-2026-1043</div><div class="mk-drug">Drug C</div><div class="mk-sub">PT-4780 · Alberta Public</div>
+                      <div style="margin:5px 0"><span class="mk-chip c-yellow"><i class="fas fa-triangle-exclamation"></i> Documents missing</span></div>
+                      <div class="mk-row" style="justify-content:space-between"><span style="font-size:.55rem;color:var(--muted)">5d in stage</span><span class="mk-avat" style="background:#0D9488">ML</span></div></div>
+                    <div class="mk-card"><div class="mk-id">CASE-2026-1051</div><div class="mk-drug">Drug E</div><div class="mk-sub">PT-4477 · Northstar Life</div>
+                      <div style="margin:5px 0"><span class="mk-chip c-orange"><i class="fas fa-calendar-xmark"></i> Auth expires ≤30d</span></div>
+                      <div class="mk-row" style="justify-content:space-between"><span style="font-size:.55rem;color:var(--muted)">7d in stage</span><span class="mk-avat" style="background:#4F46E5">PS</span></div></div>
+                  </div>
+                  <div class="mk-col">
+                    <div class="mk-colhead"><span class="risk-dot" style="background:#8B5CF6"></span>AWAITING PRESCRIBER<span style="margin-left:auto;color:var(--muted)">3</span></div>
+                    <div class="mk-card"><div class="mk-id">CASE-2026-1049</div><div class="mk-drug">Drug C</div><div class="mk-sub">PT-4501 · Alberta Public</div>
+                      <div style="margin:5px 0"><span class="mk-chip c-green"><i class="fas fa-circle-check"></i> Normal</span></div>
+                      <div class="mk-row" style="justify-content:space-between"><span style="font-size:.55rem;color:var(--muted)">9d in stage</span><span class="mk-avat" style="background:#4F46E5">PS</span></div></div>
+                    <div class="mk-card"><div class="mk-id">CASE-2026-1056</div><div class="mk-drug">Drug A</div><div class="mk-sub">PT-4390 · Maple Benefits</div>
+                      <div style="margin:5px 0"><span class="mk-chip c-green"><i class="fas fa-circle-check"></i> Normal</span></div>
+                      <div class="mk-row" style="justify-content:space-between"><span style="font-size:.55rem;color:var(--muted)">7d in stage</span><span class="mk-avat" style="background:#0D9488">ML</span></div></div>
+                  </div>
+                  <div class="mk-col" style="background:var(--primary-soft);border-color:#B2DFDB">
+                    <div class="mk-colhead"><span class="risk-dot" style="background:#3B82F6"></span>READY TO SUBMIT<span style="margin-left:auto;color:var(--muted)">2</span></div>
+                    <div class="mk-card" style="border-color:var(--primary);box-shadow:0 4px 12px rgba(0,105,92,.16)">
+                      <div class="mk-id">CASE-2026-1050</div><div class="mk-drug">Drug B</div><div class="mk-sub">PT-4498 · Prairie Blue Cross</div>
+                      <div style="margin:5px 0"><span class="mk-chip c-green"><i class="fas fa-circle-check"></i> Normal</span></div>
+                      <div style="font-size:.55rem;background:var(--gray-soft);border-radius:5px;padding:3px 5px;margin-bottom:5px"><i class="fas fa-forward-step" style="color:var(--primary)"></i> Submit via existing channel</div>
+                      <div class="mk-row" style="justify-content:space-between"><span style="font-size:.55rem;color:var(--muted)">3d in stage</span><span class="mk-avat" style="background:#2563EB">DW</span></div></div>
+                  </div>
+                  <div class="mk-col">
+                    <div class="mk-colhead"><span class="risk-dot" style="background:#06B6D4"></span>INSURER REVIEW<span style="margin-left:auto;color:var(--muted)">6</span></div>
+                    <div class="mk-card"><div class="mk-id">CASE-2026-1042</div><div class="mk-drug">Drug A</div><div class="mk-sub">PT-4821 · Maple Benefits</div>
+                      <div style="margin:5px 0"><span class="mk-chip c-red"><i class="fas fa-bell"></i> Response overdue</span></div>
+                      <div class="mk-row" style="justify-content:space-between"><span style="font-size:.55rem;color:var(--muted)">7d in stage</span><span class="mk-avat" style="background:#4F46E5">PS</span></div></div>
+                    <div class="mk-card"><div class="mk-id">CASE-2026-1047</div><div class="mk-drug">Drug A</div><div class="mk-sub">PT-4590 · Maple Benefits</div>
+                      <div style="margin:5px 0"><span class="mk-chip c-red"><i class="fas fa-bell"></i> Response overdue</span></div>
+                      <div class="mk-row" style="justify-content:space-between"><span style="font-size:.55rem;color:var(--muted)">19d in stage</span><span class="mk-avat" style="background:#2563EB">DW</span></div></div>
+                  </div>
+                </div>
+                <div style="margin-top:10px;font-size:.6rem;color:var(--muted);background:var(--gray-soft);border-radius:8px;padding:7px 10px">
+                  <i class="fas fa-hand-pointer" style="color:var(--primary)"></i> Every card carries its biggest active risk — hover the label for full details. Patient names are never displayed.
+                </div>
+              </div>
+            </div>
+
+            <!-- SLIDE 3 — Authorization Lifecycle -->
+            <div class="hc-slide" data-hc="2">
+              <div class="hc-body">
+                <div class="hc-head">
+                  <i class="fas fa-rotate"></i>
+                  <b>Authorization Lifecycle</b>
+                  <span>— CASE-2026-1044 · Drug B · SYN-AUTH-88213</span>
+                </div>
+                <div style="background:var(--warn-soft);border:1px solid #FDE68A;border-radius:9px;padding:8px 12px;margin-bottom:12px;font-size:.64rem;color:#78350F">
+                  <i class="fas fa-shield-halved"></i> <b>Administrative authorization risk — pharmacist or prescriber review required.</b> Nothing is renewed automatically; no prescriber is contacted automatically.
+                </div>
+                <div class="mk" style="padding:12px 14px;margin-bottom:11px">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                    <span class="mk-chip c-orange" style="font-size:.62rem;padding:3px 9px">Expiring within 30 days</span>
+                    <span style="font-size:.66rem;color:var(--muted)">Authorization expires <b style="color:var(--ink)">Sep 2, 2026</b> · 23 days remaining</span>
+                    <span style="margin-left:auto;font-size:1.15rem;font-weight:800;color:var(--orange)">23d</span>
+                  </div>
+                  <div style="display:flex;align-items:center">
+                    <div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div style="font-size:.54rem;color:var(--muted)">Approved</div></div>
+                    <div style="height:2px;flex:1;background:var(--ok);margin-bottom:14px"></div>
+                    <div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div style="font-size:.54rem;color:var(--muted)">Expiry recorded</div></div>
+                    <div style="height:2px;flex:1;background:var(--ok);margin-bottom:14px"></div>
+                    <div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div style="font-size:.54rem;color:var(--muted)">90-day reminder</div></div>
+                    <div style="height:2px;flex:1;background:var(--ok);margin-bottom:14px"></div>
+                    <div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div style="font-size:.54rem;color:var(--muted)">60-day task</div></div>
+                    <div style="height:2px;flex:1;background:var(--orange);margin-bottom:14px"></div>
+                    <div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--orange);margin:0 auto 5px;box-shadow:0 0 0 4px var(--orange-soft)"></div><div style="font-size:.54rem;color:var(--ink);font-weight:700">30-day escalation</div></div>
+                    <div style="height:2px;flex:1;background:var(--line);margin-bottom:14px"></div>
+                    <div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:#E5E7EB;margin:0 auto 5px"></div><div style="font-size:.54rem;color:var(--muted)">Reauth submitted</div></div>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+                  <div class="mk" style="padding:11px">
+                    <div style="font-size:.7rem;font-weight:700;margin-bottom:7px"><i class="fas fa-list-check" style="color:var(--primary)"></i> Scheduled reauthorization work</div>
+                    <div class="mk-row" style="padding:5px 0;border-bottom:1px solid var(--line)"><input type="checkbox" style="width:12px;height:12px;accent-color:var(--primary)"><span style="flex:1">Start reauthorization preparation</span><span class="mk-chip c-indigo">AUTO</span></div>
+                    <div class="mk-row" style="padding:5px 0;border-bottom:1px solid var(--line)"><input type="checkbox" style="width:12px;height:12px;accent-color:var(--primary)"><span style="flex:1">Request updated prescriber letter</span><span class="mk-avat" style="background:#0D9488">ML</span></div>
+                    <div class="mk-row" style="padding:5px 0"><input type="checkbox" style="width:12px;height:12px;accent-color:var(--primary)"><span style="flex:1">Submit reauth package</span><span class="mk-avat" style="background:#2563EB">DW</span></div>
+                  </div>
+                  <div class="mk" style="padding:11px">
+                    <div style="font-size:.7rem;font-weight:700;margin-bottom:7px"><i class="fas fa-triangle-exclamation" style="color:var(--orange)"></i> Other authorizations at risk</div>
+                    <div class="mk-row" style="justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span><b>CASE-2026-1048</b> · Drug C</span><span class="mk-chip c-red">12d</span></div>
+                    <div class="mk-row" style="justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span><b>CASE-2026-1051</b> · Drug E</span><span class="mk-chip c-orange">20d</span></div>
+                    <div class="mk-row" style="justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span><b>CASE-2026-1063</b> · Drug A</span><span class="mk-chip c-orange">26d</span></div>
+                    <div class="mk-row" style="justify-content:space-between;padding:5px 0"><span><b>CASE-2026-1062</b> · Drug E</span><span class="mk-chip c-yellow">28d</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="hc-dots" id="hcDots">
+            <button class="on" onclick="hcGo(0,true)" aria-label="Coverage &amp; Access"></button>
+            <button onclick="hcGo(1,true)" aria-label="Case Workspace"></button>
+            <button onclick="hcGo(2,true)" aria-label="Authorization Lifecycle"></button>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="dashStats"></div>
+        <div class="card" style="margin-top:12px" id="wfStripCard">
+          <div class="card-title"><i class="fas fa-diagram-project"></i> One connected workflow</div>
+          <div class="wf-strip" id="wfStrip"></div>
+        </div>
+        <div class="dash-grid">
+          <div class="card">
+            <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Recent activity</div>
+            <div id="dashActivity"></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fas fa-plug"></i> Works alongside your existing tools</div>
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">AlgoPharma organizes the case, documents, tasks, deadlines, and follow-up history in one place. It does <b>not</b> replace:</p>
+            <ul class="pos-list">
+              <li>Pharmacy management systems (e.g. Kroll, PharmaClik Rx)</li>
+              <li>Insurance adjudication systems</li>
+              <li>Insurer portals</li>
+              <li>Fax, phone, email or electronic submission channels</li>
+              <li>Pharmacist or physician judgment</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORKSPACE -->
+      <div class="page" id="page-workspace">
+        <div class="page-head" style="margin-bottom:10px">
+          <h1><i class="fas fa-table-columns"></i>Special Authorization Case Workspace</h1>
+          <p>Drag cards between stages, or click a card for the full case file — including the coverage result for its drug. The colored risk label on each card shows the biggest active risk; <b>hover it for full details</b>. Patient names are never shown.</p>
+        </div>
+        <div class="kb-filters" id="kbFilters"></div>
+        <div class="kb" id="kb"></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="page" id="page-reports">
+        <div class="page-head">
+          <h1><i class="fas fa-chart-column"></i>Reports &amp; Audit</h1>
+          <p>Operational metrics a pharmacy can actually measure — processing time, missing documents, follow-up completion, expiry prevention. <b>These figures are synthetic demo data and do not represent real pharmacy performance.</b></p>
+        </div>
+        <div class="stat-grid" id="repTiles" style="grid-template-columns:repeat(6,1fr)"></div>
+        <div class="rep-grid" id="repGrid"></div>
+        <div class="card" style="margin-top:14px;padding:18px">
+          <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Audit log <span style="font-weight:500;font-size:.72rem;color:var(--muted)">— actor, role and timestamp for every status, document, task and field change</span></div>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <select class="inp" id="auFType" style="width:auto" onchange="renderAuditPage()"><option value="">All event types</option><option value="status">Status</option><option value="doc">Documents</option><option value="task">Tasks</option><option value="comm">Communications</option><option value="case">Case</option></select>
+          </div>
+          <div style="overflow:auto"><table class="tbl"><thead><tr><th>When</th><th>Actor</th><th>Role</th><th>Event</th><th>Case</th></tr></thead><tbody id="auditBody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">AlgoPharma provides insurance coverage information and pharmacy administrative workflow support. It does not provide diagnostic, treatment, prescribing, dosing, medication-switching, or clinical suitability advice. Final clinical decisions are made by the prescribing physician and pharmacist. Final reimbursement decisions are made by the insurer.</div>
+  </div>
+</div>
+
+<!-- ============ CASE DRAWER ============ -->
+<div class="ovl" id="dwOvl" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dw-head">
+    <div style="display:flex;align-items:flex-start;gap:13px">
+      <div style="width:42px;height:42px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0"><i class="fas fa-folder-open"></i></div>
+      <div style="flex:1;min-width:0">
+        <div id="dwId" style="font-size:.68rem;font-weight:800;color:var(--muted);letter-spacing:.4px"></div>
+        <div id="dwTitle" style="font-size:1.15rem;font-weight:800;margin:1px 0 2px"></div>
+        <div id="dwSub" style="font-size:.76rem;color:var(--muted)"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <select class="inp" id="dwStatus" style="width:auto;font-weight:700" onchange="dwStatusChange(this.value)"></select>
+        <div id="dwRoleNote" style="font-size:.64rem;color:var(--muted);max-width:250px;text-align:right"></div>
+      </div>
+      <i class="fas fa-times" style="cursor:pointer;color:var(--muted);font-size:1.05rem;padding:4px" onclick="closeDrawer()"></i>
+    </div>
+  </div>
+  <div class="dw-tabs">
+    <div class="dw-tab active" data-t="ov" onclick="dwTab('ov')"><i class="fas fa-circle-info"></i> Overview &amp; Lifecycle</div>
+    <div class="dw-tab" data-t="cov" onclick="dwTab('cov')"><i class="fas fa-magnifying-glass-dollar"></i> Coverage</div>
+    <div class="dw-tab" data-t="work" onclick="dwTab('work')"><i class="fas fa-file-shield"></i> Documents <span class="chip c-indigo" id="dwDocN" style="margin:0">0</span> &amp; Tasks <span class="chip c-indigo" id="dwTaskN" style="margin:0">0</span></div>
+    <div class="dw-tab" data-t="act" onclick="dwTab('act')"><i class="fas fa-clock-rotate-left"></i> Activity</div>
+  </div>
+  <div class="dw-body">
+    <div class="dw-pane active" id="dwP-ov"></div>
+    <div class="dw-pane" id="dwP-cov"></div>
+    <div class="dw-pane" id="dwP-work">
+      <div id="dwSecDocs"></div>
+      <div style="border-top:1px solid var(--line);margin:18px 0"></div>
+      <div id="dwSecTasks"></div>
+    </div>
+    <div class="dw-pane" id="dwP-act">
+      <div id="dwSecComms"></div>
+      <div style="border-top:1px solid var(--line);margin:18px 0"></div>
+      <div id="dwSecAudit"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-ovl" id="confirmOvl"><div class="modal" style="width:430px">
+  <h3 id="cfTitle" style="margin-bottom:8px;font-size:1.05rem"></h3>
+  <p id="cfMsg" style="font-size:.83rem;color:var(--muted);line-height:1.55;margin-bottom:18px"></p>
+  <div style="display:flex;justify-content:flex-end;gap:9px">
+    <button class="btn btn-ghost" onclick="cfClose()">Cancel</button>
+    <button class="btn btn-danger" id="cfYes">Confirm</button>
+  </div>
+</div></div>
+
+<div class="modal-ovl" id="apprOvl"><div class="modal">
+  <h3 style="margin-bottom:4px"><i class="fas fa-circle-check" style="color:var(--ok);margin-right:8px"></i>Record approval</h3>
+  <p style="font-size:.78rem;color:var(--muted);margin-bottom:16px">Record the approval received from the insurer through your existing channel. AlgoPharma never approves insurance itself.</p>
+  <div style="display:flex;flex-direction:column;gap:11px">
+    <div><label class="lbl">Authorization number</label><input class="inp" id="apNo"></div>
+    <div><label class="lbl">Authorization expiry date (YYYY-MM-DD)</label><input class="inp" id="apExp"><div class="err" id="apErr">Enter a valid future date as YYYY-MM-DD.</div></div>
+    <div><label class="lbl">Note (optional)</label><input class="inp" id="apNote" placeholder="e.g. Approval notice received via insurer portal"></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:18px">
+    <button class="btn btn-ghost" onclick="closeM('apprOvl')">Cancel</button>
+    <button class="btn btn-pri" onclick="apSave()"><i class="fas fa-check"></i> Record approval</button>
+  </div>
+</div></div>
+
+<div class="modal-ovl" id="denyOvl"><div class="modal">
+  <h3 style="margin-bottom:4px"><i class="fas fa-circle-xmark" style="color:var(--danger);margin-right:8px"></i>Record denial</h3>
+  <p style="font-size:.78rem;color:var(--muted);margin-bottom:16px">Record the denial received from the insurer. An appeal-preparation task will be created for pharmacist review.</p>
+  <div style="display:flex;flex-direction:column;gap:11px">
+    <div><label class="lbl">Denial reason (from insurer notice)</label>
+      <select class="inp" id="dnReason"><option>Prior therapy not documented (demo)</option><option>Missing chart documentation (demo)</option><option>Plan exclusion — verification needed (demo)</option><option>Incomplete form (demo)</option></select></div>
+    <div><label class="lbl">Appeal deadline (auto: +30 days)</label><input class="inp" id="dnDeadline" readonly style="background:var(--gray-soft)"></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:18px">
+    <button class="btn btn-ghost" onclick="closeM('denyOvl')">Cancel</button>
+    <button class="btn btn-danger" onclick="dnSave()"><i class="fas fa-check"></i> Record denial</button>
+  </div>
+</div></div>
+
+<div class="modal-ovl" id="intakeOvl"><div class="modal" style="width:640px;max-width:94vw;max-height:88vh;overflow-y:auto">
+  <h3 style="margin-bottom:4px"><i class="fas fa-cash-register" style="color:var(--primary);margin-right:8px"></i>New case — coverage check</h3>
+  <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px">The usual starting point: a claim rejects at the counter, or a new specialty prescription arrives. Check the coverage position first — then create the case in one click, with its document checklist and tasks generated for you.</p>
+  <div id="ikForm">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+      <div><label class="lbl">Medication (synthetic)</label><select class="inp" id="ikDrug" onchange="ikPreview()"></select></div>
+      <div><label class="lbl">Insurer / plan</label><select class="inp" id="ikIns" onchange="ikPreview()"></select></div>
+      <div><label class="lbl">Plan / group number (optional)</label><input class="inp" id="ikPlan" placeholder="e.g. MB-Group-2231"></div>
+      <div><label class="lbl">Patient reference (de-identified)</label><input class="inp" id="ikPt" readonly style="background:var(--gray-soft)"></div>
+    </div>
+    <div id="ikHint" style="font-size:.7rem;color:var(--muted);margin-top:9px;background:var(--gray-soft);border-radius:8px;padding:8px 11px"></div>
+    <div style="font-size:.66rem;color:var(--muted);margin-top:9px"><i class="fas fa-user-shield" style="color:var(--primary)"></i> A de-identified alias is generated automatically — patient names are never entered or shown here.</div>
+    <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeM('intakeOvl')">Cancel</button>
+      <button class="btn btn-pri" onclick="ikCheck()"><i class="fas fa-magnifying-glass-dollar"></i> Check coverage</button>
+    </div>
+  </div>
+  <div id="ikResult" style="display:none"></div>
+</div></div>
+
+<!-- ============ GUIDED TOUR ============ -->
+<div class="tour" id="tour">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+    <span style="font-size:.64rem;font-weight:800;letter-spacing:1px;color:#34D399;text-transform:uppercase"><i class="fas fa-circle-play"></i> Guided demo — one connected workflow</span>
+    <span id="tourN" style="font-size:.66rem;color:#94A3B8"></span>
+  </div>
+  <h3 id="tourT" style="font-size:1rem;margin-bottom:5px"></h3>
+  <p id="tourX" style="font-size:.8rem;color:#CBD5E1;line-height:1.6;margin-bottom:13px"></p>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+    <div class="tour-dots" id="tourDots"></div>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-sm" style="background:transparent;color:#CBD5E1;border:1px solid #475569" onclick="tourEnd()">End</button>
+      <button class="btn btn-sm" id="tourPrev" style="background:transparent;color:#E2E8F0;border:1px solid #64748B" onclick="tourPrev()"><i class="fas fa-arrow-left"></i> Previous</button>
+      <button class="btn btn-sm btn-pri" id="tourNext" style="background:var(--ok)" onclick="tourNext()">Next <i class="fas fa-arrow-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AI ASSISTANT ============ -->
+<button class="ai-fab" id="aiFab" onclick="aiToggle()" title="AlgoPharma Assistant (scripted demo)"><i class="fas fa-robot" id="aiFabIc"></i><span class="ai-dot" id="aiDot"></span></button>
+<div class="ai-win" id="aiWin">
+  <div class="ai-head">
+    <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center"><i class="fas fa-robot"></i></div>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:.9rem">AlgoPharma Assistant</div>
+      <div style="font-size:.66rem;opacity:.85">Administrative questions only <span style="background:rgba(255,255,255,.2);border-radius:7px;padding:1px 7px;margin-left:3px">Scripted demo</span></div>
+    </div>
+    <i class="fas fa-pen-to-square" title="New chat" style="cursor:pointer;opacity:.85;padding:4px" onclick="aiNew()"></i>
+    <i class="fas fa-times" title="Close" style="cursor:pointer;opacity:.85;padding:4px" onclick="aiToggle()"></i>
+  </div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-inrow">
+    <input class="inp" id="aiInp" placeholder="Ask an administrative question…" style="border-radius:20px" onkeypress="if(event.key==='Enter')aiSend()">
+    <button class="btn btn-pri" style="border-radius:50%;width:40px;height:40px;padding:0;justify-content:center" onclick="aiSend()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<div id="riskPop"></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+'use strict';
+// ================================================================
+//  AlgoPharma V2 — integrated insurance & SA workflow feature demo.
+//  All data is synthetic and fictional. No real patients, claims,
+//  insurers, or medical records. Administrative workflow only.
+// ================================================================
+// ---------- constants & helpers ----------
+const TODAY = new Date(2026, 7, 10); // fixed demo date: Aug 10, 2026
+const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const D = s => new Date(s + 'T00:00:00');
+const du = s => s ? Math.round((D(s) - TODAY) / 864e5) : null;      // days until (neg = past)
+const fd = s => { const d = D(s); return MO[d.getMonth()] + ' ' + d.getDate(); };
+const fdy = s => fd(s) + ', ' + D(s).getFullYear();
+const addD = (s, n) => { const d = D(s || '2026-08-10'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const nowStr = () => { const t = new Date(); return 'Aug 10, ' + String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0'); };
+const esc = s => String(s).replace(/</g, '&lt;');
+
+const STATUS = {
+  gathering:  { l: 'Gathering information',       c: '#F59E0B' },
+  prescriber: { l: 'Awaiting prescriber',         c: '#8B5CF6' },
+  ready:      { l: 'Ready to submit',             c: '#3B82F6' },
+  submitted:  { l: 'Submitted — insurer review',  c: '#06B6D4' },
+  info:       { l: 'Needs more information',      c: '#EF4444' },
+  approved:   { l: 'Approved',                    c: '#10B981' },
+  denied:     { l: 'Denied — appeal',             c: '#991B1B' },
+  closed:     { l: 'Closed',                      c: '#6B7280' }
+};
+const TEAM = {
+  'Priya Shah':     { role: 'Pharmacist',          c: '#4F46E5', s: 'PS' },
+  'Marcus Lee':     { role: 'Technician',          c: '#0D9488', s: 'ML' },
+  'Dana Whitfield': { role: 'Billing Coordinator', c: '#2563EB', s: 'DW' },
+  'Sofia Ramos':    { role: 'Manager',             c: '#9333EA', s: 'SR' }
+};
+const ROLE_USER = { pharmacist: 'Priya Shah', technician: 'Marcus Lee', billing: 'Dana Whitfield', manager: 'Sofia Ramos' };
+// Role permissions: move = change case status, del = delete documents,
+// finalize = record approval/denial & verify documents, pharmTask = complete pharmacist-review tasks
+const PERM = {
+  pharmacist: { move: true,  del: true,  finalize: true,  pharmTask: true, assignOthers: true,  supervise: true,
+    note: 'Pharmacist — upload, review, approve documents, change status, assign work' },
+  technician: { move: false, del: false, finalize: false, pharmTask: false, assignOthers: false, supervise: false,
+    note: 'Technician — upload & complete assigned tasks (self-assign only); cannot change case status, reassign owners, delete documents, or finalize decisions' },
+  billing:    { move: true,  del: false, finalize: false, pharmTask: false, assignOthers: true,  supervise: false,
+    note: 'Billing Coordinator — upload, manage payer follow-up, assign work, update administrative fields; cannot delete documents or finalize decisions' },
+  manager:    { move: true,  del: true,  finalize: true,  pharmTask: true, assignOthers: true,  supervise: true,
+    note: 'Manager — full operational visibility, supervision and reporting' }
+};
+let ROLE = 'pharmacist';
+const me = () => ROLE_USER[ROLE];
+
+const DRUGS = {
+  'Drug A': { din: 'SYN-00112', form: 'Injection', cls: 'Biologic — synthetic demo record' },
+  'Drug B': { din: 'SYN-00218', form: 'Tablet',    cls: 'Specialty tablet — synthetic demo record' },
+  'Drug C': { din: 'SYN-00305', form: 'Tablet',    cls: 'Specialist-managed therapy — synthetic demo record' },
+  'Drug D': { din: 'SYN-00417', form: 'Tablet',    cls: 'Maintenance therapy — synthetic demo record' },
+  'Drug E': { din: 'SYN-00529', form: 'Injection', cls: 'Injectable specialty — synthetic demo record' },
+  'Drug F': { din: 'SYN-00633', form: 'Tablet',    cls: 'Maintenance therapy — synthetic demo record' }
+};
+const INSURERS = ['Maple Benefits (synthetic)', 'Prairie Blue Cross (synthetic)', 'Northstar Life (synthetic)', 'Aurora Health Plan (synthetic)', 'Alberta Public Plan (synthetic)'];
+const STORES = ['Store #001 — Main Street (demo)', 'Store #002 — Riverside (demo)'];
+
+// ---------- synthetic coverage rules (demo only) ----------
+const CV_STATUS = {
+  listed:     { c: '#16A34A', bg: '#F0FDF4', bd: '#BBF7D0', i: 'fa-circle-check',        l: 'Listed — general benefit' },
+  restricted: { c: '#CA8A04', bg: '#FEFCE8', bd: '#FDE68A', i: 'fa-triangle-exclamation', l: 'Restricted benefit — criteria may apply' },
+  sa:         { c: '#EA580C', bg: '#FFF7ED', bd: '#FED7AA', i: 'fa-file-signature',       l: 'Special authorization may be required' },
+  private:    { c: '#2563EB', bg: '#EFF6FF', bd: '#BFDBFE', i: 'fa-building-shield',      l: 'Plan-specific verification recommended' },
+  none:       { c: '#64748B', bg: '#F8FAFC', bd: '#E2E8F0', i: 'fa-circle-question',      l: 'No verifiable current rule found' }
+};
+const RULES = {
+  'Drug A': { kind: 'sa',
+    phrase: 'Based on the available demo rule, this medication may require special authorization under the selected public plan.',
+    chips: [['c-orange', 'Prior-therapy criteria may apply'], ['c-blue', 'Specialist involvement expected']],
+    criteria: ['Condition severity documented by the prescriber (administrative record only)', 'Documented trial of first-line therapy (per synthetic rule)', 'Prescribed by, or in consultation with, a specialist', 'Baseline assessment scores on file'],
+    docs: ['Special-authorization form', 'Prescriber support letter', 'Chart notes incl. prior therapy', 'Baseline assessment scores'],
+    src: { n: 'Alberta Synthetic Benefit List — SA criteria (demo)', v: '2026-07', eff: 'Jul 1, 2026', rev: 'Jul 28, 2026', by: 'S. Patel — rules editor (synthetic)', conf: 'Verified demo rule' } },
+  'Drug B': { kind: 'restricted',
+    phrase: 'Based on the available demo rule, this medication appears to be a restricted benefit — coverage criteria may apply.',
+    chips: [['c-yellow', 'Prescriber attestation may be needed']],
+    criteria: ['Qualifying condition on file with the prescriber', 'Documented trial of standard therapy unless contraindicated (per synthetic rule)'],
+    docs: ['Prescriber attestation of criteria', 'Prior-therapy records'],
+    src: { n: 'Alberta Synthetic Benefit List — Restricted benefits (demo)', v: '2026-06', eff: 'Jun 1, 2026', rev: 'Jul 10, 2026', by: 'P. Shah, PharmD (synthetic)', conf: 'Verified demo rule' } },
+  'Drug C': { kind: 'sa',
+    phrase: 'Based on the available demo rule, this medication may require special authorization with specialist involvement.',
+    chips: [['c-blue', 'Specialist clinic letter expected'], ['c-orange', 'Baseline lab report may be required']],
+    criteria: ['Diagnosis confirmed by a specialist clinic (administrative record only)', 'Baseline lab report on file', 'Prescribed by a specialist'],
+    docs: ['Special-authorization form', 'Specialist consultation letter', 'Baseline lab report', 'Patient consent'],
+    src: { n: 'Alberta Synthetic Specialty Criteria (demo)', v: '2026-05', eff: 'May 1, 2026', rev: 'Jul 22, 2026', by: 'Compliance team (synthetic)', conf: 'Verified demo rule' } },
+  'Drug D': { kind: 'listed',
+    phrase: 'Based on the available demo rule, this medication appears to be listed as a general benefit — no special authorization expected.',
+    chips: [], criteria: [], docs: [],
+    src: { n: 'Alberta Synthetic Benefit List — General benefits (demo)', v: '2026-07', eff: 'Jul 1, 2026', rev: 'Jul 25, 2026', by: 'Compliance team (synthetic)', conf: 'Verified demo rule' } },
+  'Drug E': { kind: 'sa',
+    phrase: 'Based on the available demo rule, this medication may require special authorization under the selected public plan.',
+    chips: [['c-orange', 'Prior-therapy criteria may apply']],
+    criteria: ['Documented trial of first-line therapy (per synthetic rule)', 'Prescriber confirmation of criteria'],
+    docs: ['Special-authorization form', 'Prescriber support letter', 'Prior-therapy records'],
+    src: { n: 'Alberta Synthetic Benefit List — SA criteria (demo)', v: '2026-07', eff: 'Jul 1, 2026', rev: 'Jul 28, 2026', by: 'S. Patel — rules editor (synthetic)', conf: 'Verified demo rule' } },
+  'Drug F': { kind: 'listed',
+    phrase: 'Based on the available demo rule, this medication appears to be listed as a general benefit — no special authorization expected.',
+    chips: [], criteria: [], docs: [],
+    src: { n: 'Alberta Synthetic Benefit List — General benefits (demo)', v: '2026-04', eff: 'Apr 1, 2026', rev: 'Jun 2, 2026', by: 'Compliance team (synthetic)', conf: 'Verified demo rule' } }
+};
+const PRIV_RULE = { kind: 'private',
+  phrase: 'Private plan booklets vary by employer. Prior authorization is commonly required for specialty medications — verify against the member plan before advising.',
+  chips: [['c-blue', 'Plan booklet check recommended']],
+  criteria: ['Coverage varies by employer plan booklet and insurer', 'Prior authorization commonly required for specialty medications'],
+  docs: ['Member plan booklet or portal screenshot', 'Insurer prior-authorization form', 'Prescriber statement of medical necessity'],
+  src: { n: 'Internal rules note — private plan patterns (demo)', v: '2026-06', eff: 'Jun 15, 2026', rev: 'Jul 15, 2026', by: 'Compliance team (synthetic)', conf: 'General guidance — verify with insurer' } };
+
+// ---------- case data ----------
+let TASK_SEQ = 2130, CASE_SEQ = 1066;
+function mkTask(id, title, who, due, o) {
+  return Object.assign({ id: 'T-' + id, title, who, due, pri: 'Normal', status: 'Open', by: 'System', origin: 'SYSTEM', reqPharm: false }, o || {});
+}
+function mkCase(o) {
+  return Object.assign({
+    pt: 'PT-0000', drug: 'Drug A', owner: null, status: 'gathering', store: STORES[0],
+    created: '2026-07-20', stageSince: '2026-08-01', submittedDate: null, expResp: null,
+    approvalDate: null, authNo: null, authStart: null, authExpiry: null,
+    reauthStatus: 'Not started', reauthOwner: null, reauthStart: null,
+    nextFollowUp: null, nextAction: 'Review case', appealDeadline: null, denialReason: null,
+    missingDocs: [], docs: [], tasks: [], comms: [], audit: []
+  }, o);
+}
+const seedAudit = (d, w, r, a, k) => ({ t: d, w, r, a, k: k || 'case' });
+
+let CASES = [
+  mkCase({ id: 'CASE-2026-1042', pt: 'PT-4821', drug: 'Drug A', insurer: INSURERS[0], plan: 'MB-Group-2231', owner: 'Priya Shah',
+    status: 'submitted', created: '2026-07-28', stageSince: '2026-08-03', submittedDate: '2026-08-03', expResp: '2026-08-13',
+    nextFollowUp: '2026-08-12', nextAction: 'Follow up with insurer',
+    docs: [ { type: 'Insurance card', v: 1, by: 'Marcus Lee', d: '2026-07-28', ver: 'Verified', task: null },
+            { type: 'Special-authorization form', v: 2, by: 'Priya Shah', d: '2026-08-01', ver: 'Verified', task: null },
+            { type: 'Prescriber support letter', v: 1, by: 'Marcus Lee', d: '2026-08-02', ver: 'Pending review', task: null } ],
+    tasks: [ mkTask(2101, 'Follow up with insurer', 'Dana Whitfield', '2026-08-12') ],
+    comms: [ { dt: 'Aug 4, 09:40', type: 'Insurer portal', party: 'Maple Benefits (synthetic)', staff: 'Dana Whitfield', outcome: 'Insurer confirmed receipt', fu: '2026-08-12', att: null },
+             { dt: 'Aug 3, 14:05', type: 'Insurer portal', party: 'Maple Benefits (synthetic)', staff: 'Dana Whitfield', outcome: 'SA package submitted via existing insurer portal', fu: null, att: 'SA package (simulated)' } ],
+    audit: [ seedAudit('Aug 3, 14:05', 'Dana Whitfield', 'Billing Coordinator', 'Status changed: Ready to submit → Submitted — insurer review', 'status'),
+             seedAudit('Aug 1, 11:30', 'Priya Shah', 'Pharmacist', 'Uploaded Special-authorization form (v2 — corrected identifier)', 'doc'),
+             seedAudit('Jul 28, 09:15', 'Marcus Lee', 'Technician', 'Case created from coverage check CHK-3021', 'case') ] }),
+  mkCase({ id: 'CASE-2026-1043', pt: 'PT-4780', drug: 'Drug C', insurer: INSURERS[4], plan: 'Non-Group (demo)', owner: 'Marcus Lee',
+    status: 'gathering', created: '2026-08-06', stageSince: '2026-08-06', nextFollowUp: '2026-08-13',
+    nextAction: 'Confirm patient consent', missingDocs: ['Patient consent', 'Chart notes'],
+    docs: [ { type: 'Insurance card', v: 1, by: 'Marcus Lee', d: '2026-08-06', ver: 'Pending review', task: null } ],
+    tasks: [ mkTask(2102, 'Request missing chart document', 'Marcus Lee', '2026-08-12'),
+             mkTask(2103, 'Confirm patient consent', 'Marcus Lee', '2026-08-12', { origin: 'MANUAL', by: 'Priya Shah' }) ],
+    comms: [ { dt: 'Aug 7, 10:20', type: 'Phone', party: 'Prescriber office (demo)', staff: 'Marcus Lee', outcome: 'No answer — follow up in two business days', fu: '2026-08-11', att: null } ],
+    audit: [ seedAudit('Aug 6, 10:05', 'Marcus Lee', 'Technician', 'Case created from coverage check CHK-3038', 'case') ] }),
+  mkCase({ id: 'CASE-2026-1044', pt: 'PT-4702', drug: 'Drug B', insurer: INSURERS[1], plan: 'PB-8802', owner: 'Dana Whitfield',
+    status: 'approved', created: '2026-05-02', stageSince: '2026-05-20', submittedDate: '2026-05-12', expResp: '2026-05-22',
+    approvalDate: '2026-05-20', authNo: 'SYN-AUTH-88213', authStart: '2026-05-20', authExpiry: '2026-09-02',
+    reauthStatus: 'Not started', nextFollowUp: '2026-08-15', nextAction: 'Start reauthorization preparation',
+    docs: [ { type: 'Approval notice', v: 1, by: 'Dana Whitfield', d: '2026-05-20', ver: 'Verified', task: null } ],
+    tasks: [ mkTask(2104, 'Start reauthorization preparation', 'Dana Whitfield', '2026-08-18') ],
+    comms: [ { dt: 'May 20, 12:00', type: 'Insurer portal', party: 'Prairie Blue Cross (synthetic)', staff: 'Dana Whitfield', outcome: 'Approval notice received', fu: null, att: 'Approval notice (simulated)' } ],
+    audit: [ seedAudit('May 20, 12:00', 'Dana Whitfield', 'Billing Coordinator', 'Status changed: Submitted → Approved (SYN-AUTH-88213, expires Sep 2, 2026)', 'status') ] }),
+  mkCase({ id: 'CASE-2026-1045', pt: 'PT-4655', drug: 'Drug E', insurer: INSURERS[2], plan: 'NL-3320', owner: 'Priya Shah',
+    status: 'denied', created: '2026-06-30', stageSince: '2026-07-19', submittedDate: '2026-07-08', expResp: '2026-07-18',
+    appealDeadline: '2026-08-24', denialReason: 'Prior therapy not documented (demo)',
+    nextFollowUp: '2026-08-14', nextAction: 'Prepare appeal documents',
+    docs: [ { type: 'Denial notice', v: 1, by: 'Dana Whitfield', d: '2026-07-19', ver: 'Verified', task: null },
+            { type: 'Special-authorization form', v: 1, by: 'Priya Shah', d: '2026-07-07', ver: 'Verified', task: null } ],
+    tasks: [ mkTask(2105, 'Prepare appeal documents', 'Priya Shah', '2026-08-20', { pri: 'High', origin: 'MANUAL', by: 'Priya Shah', reqPharm: true }) ],
+    comms: [ { dt: 'Jul 19, 16:05', type: 'Insurer portal', party: 'Northstar Life (synthetic)', staff: 'Dana Whitfield', outcome: 'Denial notice received — insurer requested prior-therapy documentation for appeal', fu: '2026-08-14', att: 'Denial notice (simulated)' } ],
+    audit: [ seedAudit('Jul 19, 16:05', 'Dana Whitfield', 'Billing Coordinator', 'Status changed: Submitted → Denied — appeal (denial notice uploaded)', 'status') ] }),
+  mkCase({ id: 'CASE-2026-1046', pt: 'PT-4633', drug: 'Drug E', insurer: INSURERS[3], plan: 'AH-1177', owner: 'Dana Whitfield',
+    status: 'info', created: '2026-07-14', stageSince: '2026-07-26', submittedDate: '2026-07-25', expResp: '2026-08-04',
+    nextFollowUp: '2026-08-08', nextAction: 'Review missing document', missingDocs: ['Updated lab report'],
+    docs: [ { type: 'Insurer response', v: 1, by: 'Dana Whitfield', d: '2026-07-26', ver: 'Verified', task: 'T-2106' } ],
+    tasks: [ mkTask(2106, 'Request updated lab report', 'Marcus Lee', '2026-08-09') ],
+    comms: [ { dt: 'Jul 26, 09:32', type: 'Insurer portal', party: 'Aurora Health Plan (synthetic)', staff: 'Dana Whitfield', outcome: 'Insurer requested additional documentation', fu: '2026-08-08', att: 'Request letter (simulated)' } ],
+    audit: [ seedAudit('Jul 26, 09:32', 'Dana Whitfield', 'Billing Coordinator', 'Status changed: Submitted → Needs more information', 'status') ] }),
+  mkCase({ id: 'CASE-2026-1047', pt: 'PT-4590', drug: 'Drug A', insurer: INSURERS[0], plan: 'MB-5590', owner: 'Dana Whitfield',
+    status: 'submitted', created: '2026-07-15', stageSince: '2026-07-22', submittedDate: '2026-07-22', expResp: '2026-08-05',
+    nextFollowUp: '2026-08-09', nextAction: 'Follow up with insurer',
+    docs: [ { type: 'Special-authorization form', v: 1, by: 'Priya Shah', d: '2026-07-21', ver: 'Verified', task: null } ],
+    tasks: [ mkTask(2107, 'Follow up with insurer', 'Dana Whitfield', '2026-08-10', { pri: 'High' }) ],
+    comms: [ { dt: 'Jul 22, 11:00', type: 'Fax', party: 'Maple Benefits (synthetic)', staff: 'Dana Whitfield', outcome: 'SA package submitted by fax (existing channel)', fu: '2026-08-05', att: 'Fax confirmation (simulated)' } ],
+    audit: [ seedAudit('Jul 22, 11:00', 'Dana Whitfield', 'Billing Coordinator', 'Status changed: Ready to submit → Submitted — insurer review', 'status') ] }),
+  mkCase({ id: 'CASE-2026-1048', pt: 'PT-4544', drug: 'Drug C', insurer: INSURERS[4], plan: 'Non-Group (demo)', owner: 'Priya Shah',
+    status: 'approved', created: '2025-08-01', stageSince: '2025-08-22', approvalDate: '2025-08-22',
+    authNo: 'SYN-AUTH-77102', authStart: '2025-08-22', authExpiry: '2026-08-22',
+    reauthStatus: 'In progress', reauthOwner: 'Dana Whitfield', reauthStart: '2026-08-05',
+    nextFollowUp: '2026-08-13', nextAction: 'Submit reauthorization package',
+    docs: [ { type: 'Renewal document', v: 1, by: 'Dana Whitfield', d: '2026-08-05', ver: 'Pending review', task: 'T-2108' },
+            { type: 'Approval notice', v: 1, by: 'Priya Shah', d: '2025-08-22', ver: 'Verified', task: null } ],
+    tasks: [ mkTask(2108, 'Submit reauthorization package', 'Dana Whitfield', '2026-08-15', { pri: 'High' }) ],
+    comms: [ { dt: 'Aug 5, 10:10', type: 'Internal note', party: '—', staff: 'Dana Whitfield', outcome: 'Reauthorization preparation started (auth expires Aug 22)', fu: '2026-08-13', att: null } ],
+    audit: [ seedAudit('Aug 5, 10:10', 'Dana Whitfield', 'Billing Coordinator', 'Reauthorization preparation started', 'case') ] }),
+  mkCase({ id: 'CASE-2026-1049', pt: 'PT-4501', drug: 'Drug C', insurer: INSURERS[4], plan: 'Non-Group (demo)', owner: 'Priya Shah',
+    status: 'prescriber', created: '2026-07-30', stageSince: '2026-08-04', nextFollowUp: '2026-08-12',
+    nextAction: 'Obtain prescriber support letter',
+    docs: [ { type: 'Special-authorization form', v: 1, by: 'Priya Shah', d: '2026-08-03', ver: 'Verified', task: null } ],
+    tasks: [ mkTask(2109, 'Contact prescriber office', 'Marcus Lee', '2026-08-12') ],
+    comms: [ { dt: 'Aug 4, 15:40', type: 'Fax', party: 'Prescriber office (demo)', staff: 'Marcus Lee', outcome: 'Prescriber office requested another copy', fu: '2026-08-12', att: null } ],
+    audit: [ seedAudit('Aug 4, 15:40', 'Marcus Lee', 'Technician', 'Status changed: Gathering information → Awaiting prescriber', 'status') ] }),
+  mkCase({ id: 'CASE-2026-1050', pt: 'PT-4498', drug: 'Drug B', insurer: INSURERS[1], plan: 'PB-1094', owner: 'Dana Whitfield',
+    status: 'ready', created: '2026-07-27', stageSince: '2026-08-07', nextFollowUp: '2026-08-11',
+    nextAction: 'Submit through existing insurer channel',
+    docs: [ { type: 'Insurance card', v: 1, by: 'Marcus Lee', d: '2026-07-27', ver: 'Verified', task: null },
+            { type: 'Special-authorization form', v: 1, by: 'Priya Shah', d: '2026-08-05', ver: 'Verified', task: null },
+            { type: 'Prescriber support letter', v: 1, by: 'Marcus Lee', d: '2026-08-06', ver: 'Verified', task: null } ],
+    tasks: [ mkTask(2110, 'Submit to insurer (portal)', 'Dana Whitfield', '2026-08-11') ],
+    comms: [],
+    audit: [ seedAudit('Aug 7, 09:20', 'Priya Shah', 'Pharmacist', 'All required documents verified — moved to Ready to submit', 'status') ] }),
+  mkCase({ id: 'CASE-2026-1051', pt: 'PT-4477', drug: 'Drug E', insurer: INSURERS[2], plan: 'NL-8871', owner: 'Priya Shah',
+    status: 'gathering', created: '2026-08-04', stageSince: '2026-08-04',
+    authNo: 'SYN-AUTH-66104', authStart: '2025-08-30', authExpiry: '2026-08-30',
+    reauthStatus: 'In progress', reauthOwner: 'Priya Shah', reauthStart: '2026-08-04',
+    nextFollowUp: '2026-08-14', nextAction: 'Prepare reauthorization package', missingDocs: ['Prescriber support letter (renewal)'],
+    docs: [ { type: 'Approval notice', v: 1, by: 'Dana Whitfield', d: '2025-08-30', ver: 'Verified', task: null } ],
+    tasks: [ mkTask(2111, 'Prepare reauthorization package', 'Priya Shah', '2026-08-16') ],
+    comms: [ { dt: 'Aug 4, 11:15', type: 'Internal note', party: '—', staff: 'Priya Shah', outcome: 'Reauthorization case opened — current auth expires Aug 30', fu: '2026-08-14', att: null } ],
+    audit: [ seedAudit('Aug 4, 11:15', 'Priya Shah', 'Pharmacist', 'Reauthorization case created (current auth SYN-AUTH-66104 expires Aug 30)', 'case') ] }),
+  // --- lighter background cases ---
+  mkCase({ id: 'CASE-2026-1052', pt: 'PT-4451', drug: 'Drug B', insurer: INSURERS[3], plan: 'AH-3302', owner: 'Marcus Lee', status: 'gathering', created: '2026-08-05', stageSince: '2026-08-05', nextFollowUp: '2026-08-14', nextAction: 'Collect insurance card copy', missingDocs: ['Insurance card copy'], docs: [ { type: 'Insurance card', v: 1, by: 'Marcus Lee', d: '2026-08-05', ver: 'Pending review', task: null } ] }),
+  mkCase({ id: 'CASE-2026-1053', pt: 'PT-4432', drug: 'Drug A', insurer: INSURERS[0], plan: 'MB-7741', owner: 'Dana Whitfield', status: 'gathering', created: '2026-08-07', stageSince: '2026-08-07', nextFollowUp: '2026-08-15', nextAction: 'Collect baseline assessment scores', missingDocs: ['Baseline assessment scores'], docs: [ { type: 'Insurance card', v: 1, by: 'Marcus Lee', d: '2026-08-07', ver: 'Pending review', task: null } ] }),
+  mkCase({ id: 'CASE-2026-1054', pt: 'PT-4419', drug: 'Drug C', insurer: INSURERS[4], plan: 'Non-Group (demo)', owner: null, status: 'gathering', created: '2026-08-08', stageSince: '2026-08-08', nextFollowUp: '2026-08-16', nextAction: 'Assign a case owner', missingDocs: ['Chart notes'] }),
+  mkCase({ id: 'CASE-2026-1055', pt: 'PT-4402', drug: 'Drug E', insurer: INSURERS[2], plan: 'NL-2208', owner: 'Priya Shah', status: 'prescriber', created: '2026-07-29', stageSince: '2026-08-02', nextFollowUp: '2026-08-13', nextAction: 'Await prescriber chart notes' }),
+  mkCase({ id: 'CASE-2026-1056', pt: 'PT-4390', drug: 'Drug A', insurer: INSURERS[0], plan: 'MB-9917', owner: 'Marcus Lee', status: 'prescriber', created: '2026-08-01', stageSince: '2026-08-06', nextFollowUp: '2026-08-14', nextAction: 'Await prescriber support letter' }),
+  mkCase({ id: 'CASE-2026-1057', pt: 'PT-4381', drug: 'Drug C', insurer: INSURERS[4], plan: 'Non-Group (demo)', owner: 'Dana Whitfield', status: 'ready', created: '2026-07-25', stageSince: '2026-08-08', nextFollowUp: '2026-08-12', nextAction: 'Submit through existing insurer channel' }),
+  mkCase({ id: 'CASE-2026-1058', pt: 'PT-4374', drug: 'Drug B', insurer: INSURERS[1], plan: 'PB-6675', owner: 'Priya Shah', status: 'submitted', created: '2026-07-30', stageSince: '2026-08-06', submittedDate: '2026-08-06', expResp: '2026-08-19', nextFollowUp: '2026-08-14', nextAction: 'Await insurer decision', docs: [ { type: 'Special-authorization form', v: 1, by: 'Priya Shah', d: '2026-08-05', ver: 'Pending review', task: null } ] }),
+  mkCase({ id: 'CASE-2026-1059', pt: 'PT-4362', drug: 'Drug E', insurer: INSURERS[3], plan: 'AH-9083', owner: 'Dana Whitfield', status: 'submitted', created: '2026-08-01', stageSince: '2026-08-08', submittedDate: '2026-08-08', expResp: '2026-08-21', nextFollowUp: '2026-08-17', nextAction: 'Await insurer decision', docs: [ { type: 'Prescriber support letter', v: 1, by: 'Marcus Lee', d: '2026-08-07', ver: 'Pending review', task: null } ] }),
+  mkCase({ id: 'CASE-2026-1060', pt: 'PT-4355', drug: 'Drug A', insurer: INSURERS[0], plan: 'MB-4126', owner: 'Priya Shah', status: 'info', created: '2026-07-20', stageSince: '2026-08-01', submittedDate: '2026-07-28', expResp: '2026-08-07', nextFollowUp: '2026-08-15', nextAction: 'Provide requested documentation', missingDocs: ['Updated assessment scores'] }),
+  mkCase({ id: 'CASE-2026-1061', pt: 'PT-4348', drug: 'Drug C', insurer: INSURERS[4], plan: 'Non-Group (demo)', owner: 'Marcus Lee', status: 'submitted', created: '2026-07-18', stageSince: '2026-07-24', submittedDate: '2026-07-24', expResp: '2026-08-04', nextFollowUp: '2026-08-06', nextAction: 'Follow up with insurer' }),
+  mkCase({ id: 'CASE-2026-1062', pt: 'PT-4331', drug: 'Drug E', insurer: INSURERS[2], plan: 'NL-5561', owner: 'Dana Whitfield', status: 'submitted', created: '2026-07-26', stageSince: '2026-08-05', submittedDate: '2026-08-05', expResp: '2026-08-25', authNo: 'SYN-AUTH-51220', authStart: '2025-09-07', authExpiry: '2026-09-07', reauthStatus: 'Submitted', reauthOwner: 'Dana Whitfield', reauthStart: '2026-07-28', nextFollowUp: '2026-08-18', nextAction: 'Await reauthorization decision' }),
+  mkCase({ id: 'CASE-2026-1063', pt: 'PT-4320', drug: 'Drug A', insurer: INSURERS[0], plan: 'MB-8830', owner: 'Priya Shah', status: 'approved', created: '2025-09-01', stageSince: '2025-09-05', approvalDate: '2025-09-05', authNo: 'SYN-AUTH-90311', authStart: '2025-09-05', authExpiry: '2026-09-05', reauthStatus: 'Not started', nextFollowUp: '2026-08-20', nextAction: 'Start reauthorization preparation' }),
+  mkCase({ id: 'CASE-2026-1064', pt: 'PT-4311', drug: 'Drug B', insurer: INSURERS[1], plan: 'PB-2144', owner: 'Sofia Ramos', status: 'approved', created: '2025-10-20', stageSince: '2025-10-27', approvalDate: '2025-10-27', authNo: 'SYN-AUTH-93552', authStart: '2025-10-27', authExpiry: '2026-10-27', reauthStatus: 'Not started', nextFollowUp: '2026-09-10', nextAction: 'Plan reauthorization window' }),
+  mkCase({ id: 'CASE-2026-1065', pt: 'PT-4302', drug: 'Drug C', insurer: INSURERS[3], plan: 'AH-7719', owner: 'Marcus Lee', status: 'info', created: '2026-07-22', stageSince: '2026-08-03', submittedDate: '2026-07-29', expResp: '2026-08-08', nextFollowUp: '2026-08-16', nextAction: 'Provide clarification to insurer' }),
+  mkCase({ id: 'CASE-2026-1040', pt: 'PT-4288', drug: 'Drug D', insurer: INSURERS[4], plan: 'Non-Group (demo)', owner: 'Priya Shah', status: 'closed', created: '2026-04-01', stageSince: '2026-07-02', nextAction: 'None — case closed' }),
+  mkCase({ id: 'CASE-2026-1041', pt: 'PT-4270', drug: 'Drug F', insurer: INSURERS[1], plan: 'PB-0033', owner: 'Dana Whitfield', status: 'closed', created: '2026-03-15', stageSince: '2026-06-20', nextAction: 'None — case closed' })
+];
+
+let GLOBAL_AUDIT = [
+  { t: 'Aug 10, 08:45', w: 'Dana Whitfield', r: 'Billing Coordinator', a: 'Logged communication: Phone — insurer follow-up attempted', k: 'comm', cid: 'CASE-2026-1047' },
+  { t: 'Aug 8, 16:10', w: 'Priya Shah', r: 'Pharmacist', a: 'Verified document: Special-authorization form (v1)', k: 'doc', cid: 'CASE-2026-1050' },
+  { t: 'Aug 8, 10:30', w: 'Marcus Lee', r: 'Technician', a: 'Case created — CASE-2026-1054 (no owner assigned yet)', k: 'case', cid: 'CASE-2026-1054' },
+  { t: 'Aug 7, 09:20', w: 'Priya Shah', r: 'Pharmacist', a: 'Status changed: Gathering information → Ready to submit', k: 'status', cid: 'CASE-2026-1050' },
+  { t: 'Aug 5, 10:10', w: 'Dana Whitfield', r: 'Billing Coordinator', a: 'Reauthorization preparation started', k: 'case', cid: 'CASE-2026-1048' },
+  { t: 'Aug 4, 11:15', w: 'Priya Shah', r: 'Pharmacist', a: 'Reauthorization case created', k: 'case', cid: 'CASE-2026-1051' },
+  { t: 'Aug 3, 14:05', w: 'Dana Whitfield', r: 'Billing Coordinator', a: 'Status changed: Ready to submit → Submitted — insurer review', k: 'status', cid: 'CASE-2026-1042' }
+];
+
+// ---------- shared helpers over data ----------
+const findCase = id => CASES.find(c => c.id === id);
+const openCases = () => CASES.filter(c => c.status !== 'closed');
+function audit(c, action, kind) {
+  const e = { t: nowStr(), w: me(), r: TEAM[me()].role, a: action, k: kind || 'case', cid: c ? c.id : null };
+  if (c) c.audit.unshift(e);
+  GLOBAL_AUDIT.unshift(e);
+  renderAuditPage(); renderDashActivity();
+}
+function riskOf(c) {
+  const ax = du(c.authExpiry);
+  if (ax !== null && ax < 0 && c.status !== 'closed') return { l: 'Expired — action required', c: '#DC2626' };
+  if (ax !== null && ax <= 14) return { l: 'Auth expires ≤14d', c: '#DC2626' };
+  if (c.status === 'submitted' && c.expResp && du(c.expResp) < 0) return { l: 'Insurer response overdue', c: '#DC2626' };
+  if (c.nextFollowUp && du(c.nextFollowUp) < 0 && c.status !== 'closed') return { l: 'Follow-up overdue', c: '#EA580C' };
+  if (ax !== null && ax <= 30) return { l: 'Auth expires ≤30d', c: '#EA580C' };
+  if (c.missingDocs.length) return { l: 'Documents missing', c: '#CA8A04' };
+  if (c.status === 'denied') return { l: 'Appeal in progress', c: '#DC2626' };
+  if (!c.owner) return { l: 'No owner assigned', c: '#CA8A04' };
+  return { l: 'Normal', c: '#16A34A' };
+}
+const allTasks = () => CASES.flatMap(c => c.tasks.map(t => ({ ...t, cid: c.id })));
+const allDocs = () => CASES.flatMap(c => c.docs.map((d, i) => ({ ...d, cid: c.id, idx: i })));
+const cntWaitingDocs = () => openCases().filter(c => c.missingDocs.length).length;
+const cntExpiring30 = () => openCases().filter(c => { const d = du(c.authExpiry); return d !== null && d >= 0 && d <= 30; }).length;
+const cntOverdueFU = () => openCases().filter(c => c.nextFollowUp && du(c.nextFollowUp) < 0).length;
+
+function refreshBadges() {
+  document.getElementById('bWs').textContent = openCases().length;
+}
+
+// ---------- toasts / modals / confirm ----------
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = '<i class="fas fa-circle-info" style="color:#5EEAD4"></i>' + msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3400);
+}
+function openM(id) { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+let cfCb = null;
+function confirmDlg(title, msg, cb) {
+  document.getElementById('cfTitle').textContent = title;
+  document.getElementById('cfMsg').textContent = msg;
+  cfCb = cb; openM('confirmOvl');
+}
+function cfClose() { cfCb = null; closeM('confirmOvl'); }
+document.getElementById('cfYes').onclick = () => { const f = cfCb; cfClose(); if (f) f(); };
+
+// ---------- navigation ----------
+function go(page) {
+  document.querySelectorAll('.nav-it').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'workspace') renderKb();
+  if (page === 'reports') { renderReports(); renderAuditPage(); }
+  refreshBadges();
+}
+document.querySelectorAll('.nav-it').forEach(n => n.addEventListener('click', () => go(n.dataset.page)));
+
+function setRole(r) {
+  ROLE = r;
+  const u = me();
+  document.getElementById('userName').textContent = u;
+  const av = document.getElementById('userAvat');
+  av.textContent = TEAM[u].s; av.style.background = TEAM[u].c;
+  toast('<b>' + esc(u) + '</b> — ' + esc(PERM[r].note));
+  if (DW.open) openCase(DW.id, DW.tab);
+  renderDocsPage();
+  if (document.getElementById('page-workspace').classList.contains('active')) renderKb();
+  if (document.getElementById('page-reports').classList.contains('active')) { renderReports(); renderAuditPage(); }
+}
+
+// ---------- hero product-UI carousel ----------
+const HC_DELAY = 5000;
+let hcIdx = 0, hcTimer = null, hcHover = false;
+const hcReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function hcGo(n, manual) {
+  const slides = document.querySelectorAll('.hc-slide');
+  if (!slides.length) return;
+  hcIdx = (n + slides.length) % slides.length;
+  slides.forEach((s, i) => s.classList.toggle('on', i === hcIdx));
+  document.querySelectorAll('#hcDots button').forEach((d, i) => d.classList.toggle('on', i === hcIdx));
+  document.querySelectorAll('#hcTabs .hc-tab').forEach((t, i) => t.classList.toggle('on', i === hcIdx));
+  if (manual) hcRestart();   // a manual pick gets a full dwell time
+}
+function hcTick() {
+  // don't animate while the dashboard is hidden or the pointer is resting on it
+  if (hcHover || !document.getElementById('page-dashboard').classList.contains('active')) return;
+  hcGo(hcIdx + 1);
+}
+function hcRestart() {
+  clearInterval(hcTimer);
+  if (!hcReduced) hcTimer = setInterval(hcTick, HC_DELAY);
+}
+function hcPause() { hcHover = true; }
+function hcResume() { hcHover = false; }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const hc = document.getElementById('hc');
+  if (hc) requestAnimationFrame(() => hc.classList.add('in'));   // entry fade + scale-up
+  hcRestart();
+});
+
+// ---------- dashboard ----------
+function renderDashboard() {
+  const stats = [
+    ['fa-folder-open', 'var(--primary-soft)', 'var(--primary)', openCases().length, 'Open authorization cases', () => { WS_FILTER = null; go('workspace'); }],
+    ['fa-file-circle-question', 'var(--warn-soft)', '#A16207', cntWaitingDocs(), 'Cases waiting for documents', () => { WS_FILTER = 'docs'; go('workspace'); }],
+    ['fa-calendar-xmark', 'var(--orange-soft)', 'var(--orange)', cntExpiring30(), 'Authorizations expiring soon', () => { WS_FILTER = 'expiring'; go('workspace'); }],
+    ['fa-bell', 'var(--danger-soft)', 'var(--danger)', cntOverdueFU(), 'Overdue follow-ups', () => { WS_FILTER = 'overdue'; go('workspace'); }]
+  ];
+  document.getElementById('dashStats').innerHTML = stats.map((s, i) => `
+    <div class="stat" onclick="DASH_LINKS[${i}]()">
+      <div class="stat-ic" style="background:${s[1]};color:${s[2]}"><i class="fas ${s[0]}"></i></div>
+      <div><div class="stat-n">${s[3]}</div><div class="stat-l">${s[4]}</div><div class="stat-link">View <i class="fas fa-arrow-right"></i></div></div>
+    </div>`).join('');
+  window.DASH_LINKS = stats.map(s => s[5]);
+  const wf = ['fa-magnifying-glass-dollar|Coverage result (per drug)', 'fa-list-check|Document checklist', 'fa-folder-plus|Create SA case', 'fa-user-tag|Assign tasks', 'fa-file-shield|Collect & review documents', 'fa-paper-plane|Submit via existing insurer channel', 'fa-hourglass-half|Track insurer response', 'fa-stamp|Record approval or denial', 'fa-rotate|Monitor authorization expiry', 'fa-arrows-spin|Reauthorization before expiry'];
+  document.getElementById('wfStrip').innerHTML = wf.map((w, i) => {
+    const [ic, l] = w.split('|');
+    return `<div class="wf-step"><div class="wf-box"><i class="fas ${ic}"></i>${l}</div>${i < wf.length - 1 ? '<span class="wf-arrow"><i class="fas fa-arrow-right"></i></span>' : ''}</div>`;
+  }).join('');
+  renderDashActivity();
+}
+function renderDashActivity() {
+  const el = document.getElementById('dashActivity');
+  if (!el) return;
+  el.innerHTML = GLOBAL_AUDIT.slice(0, 6).map(e => `
+    <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.78rem;align-items:flex-start">
+      <i class="fas ${({status:'fa-arrows-turn-right',doc:'fa-file-arrow-up',task:'fa-list-check',comm:'fa-phone',case:'fa-folder-plus'})[e.k] || 'fa-circle-info'}" style="color:var(--primary);margin-top:2px;width:16px"></i>
+      <div style="flex:1">${esc(e.a)} ${e.cid ? `<a style="color:var(--primary);font-weight:700;cursor:pointer" onclick="openCase('${e.cid}')">· ${e.cid}</a>` : ''}
+      <div style="font-size:.68rem;color:var(--muted)">${e.t} · ${esc(e.w)} (${esc(e.r)})</div></div>
+    </div>`).join('');
+}
+// ---------- coverage helpers (per-case Coverage tab) ----------
+function cvPathways(R) {
+  if (R.kind === 'private') return [['Private insurer prior authorization', 'fa-building-shield', 'Submit the insurer PA form through your existing channel'], ['Patient support program (synthetic)', 'fa-hand-holding-heart', 'Manufacturer program may assist during review'], ['Copay assistance (synthetic)', 'fa-coins', 'May reduce out-of-pocket if approved']];
+  if (R.kind === 'listed') return [['Public plan', 'fa-building-columns', 'Covered as a general benefit — standard claim through your PMS']];
+  return [['Public plan + special authorization', 'fa-building-columns', 'Submit SA through your existing channel (portal / fax)'], ['Patient support program (synthetic)', 'fa-hand-holding-heart', 'Manufacturer program may bridge during review'], ['Copay assistance (synthetic)', 'fa-coins', 'May reduce out-of-pocket if approved']];
+}
+function caseCoverage(c) {
+  const isPublic = c.insurer.includes('Alberta Public');
+  const rule = RULES[c.drug] ? (isPublic ? RULES[c.drug] : PRIV_RULE) : PRIV_RULE;
+  return { rule, cat: isPublic ? 'Public plan (Alberta)' : 'Private plan' };
+}
+
+
+// ---------- intake: coverage check -> case in one click ----------
+let PT_SEQ = 4890, CHK_SEQ = 3052;
+const IK = { chk: null };
+function intakeOpen() {
+  const dSel = document.getElementById('ikDrug'), iSel = document.getElementById('ikIns');
+  dSel.innerHTML = Object.keys(DRUGS).map(d => `<option value="${d}">${d} — ${DRUGS[d].din} · ${DRUGS[d].form}</option>`).join('');
+  iSel.innerHTML = INSURERS.map(i => `<option value="${esc(i)}">${esc(i.replace(' (synthetic)', ''))}</option>`).join('');
+  iSel.value = INSURERS[4];                          // Alberta Public Plan — the common counter case
+  document.getElementById('ikPlan').value = '';
+  document.getElementById('ikPt').value = 'PT-' + PT_SEQ;
+  document.getElementById('ikForm').style.display = '';
+  document.getElementById('ikResult').style.display = 'none';
+  ikPreview();
+  openM('intakeOvl');
+}
+function ikSel() {
+  const drug = document.getElementById('ikDrug').value, insurer = document.getElementById('ikIns').value;
+  const isPublic = insurer.includes('Alberta Public');
+  const rule = RULES[drug] ? (isPublic ? RULES[drug] : PRIV_RULE) : PRIV_RULE;   // same lookup as caseCoverage()
+  return { drug, insurer, isPublic, rule, cat: isPublic ? 'Public plan (Alberta)' : 'Private plan' };
+}
+function ikPreview() {
+  const { rule } = ikSel(), st = CV_STATUS[rule.kind];
+  document.getElementById('ikHint').innerHTML =
+    `<i class="fas ${st.i}" style="color:${st.c}"></i> <b style="color:${st.c}">${st.l}</b> — rule ${rule.src.v}, last human review ${rule.src.rev}. Full result on the next step.`;
+}
+function ikCheck() {
+  const { drug, insurer, rule, cat } = ikSel(), st = CV_STATUS[rule.kind];
+  IK.chk = 'CHK-' + (CHK_SEQ++);
+  audit(null, `Coverage check ${IK.chk} run: ${drug} · ${insurer.replace(' (synthetic)', '')} — result: ${st.l}`, 'case');
+  document.getElementById('ikForm').style.display = 'none';
+  const res = document.getElementById('ikResult');
+  res.style.display = '';
+  res.innerHTML = `
+    <div style="border-radius:12px;padding:13px 15px;background:${st.bg};border:1px solid ${st.bd};margin-bottom:12px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:38px;height:38px;border-radius:10px;background:#fff;color:${st.c};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ${st.i}"></i></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.6rem;font-weight:800;color:${st.c};letter-spacing:.5px">${esc(drug).toUpperCase()} · ${cat.toUpperCase()} · SYNTHETIC · ${IK.chk}</div>
+          <div style="font-size:.98rem;font-weight:800;color:${st.c};margin:1px 0 4px">${st.l}</div>
+          <div style="font-size:.75rem;line-height:1.5">${esc(rule.phrase)}</div>
+          <div style="margin-top:7px"><span class="chip c-gray" style="margin-bottom:0"><i class="fas fa-pills"></i> ${DRUGS[drug].din}</span>
+          ${rule.chips.map(x => `<span class="chip ${x[0]}" style="margin-bottom:0">${x[1]}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+      <div class="card" style="padding:12px"><b style="font-size:.76rem"><i class="fas fa-file-circle-check" style="color:var(--primary)"></i> Checklist the case will start with</b>
+        ${rule.docs.length ? rule.docs.map(x => `<div style="display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:.73rem"><i class="far fa-circle" style="color:#CBD5E1"></i><span style="flex:1">${x}</span><span class="chip c-yellow" style="margin:0">To collect</span></div>`).join('') : '<p style="font-size:.73rem;color:var(--muted);margin-top:6px">No documents expected — general benefit. You can still create a tracking case if the claim rejected at the counter.</p>'}
+      </div>
+      <div class="card" style="padding:12px"><b style="font-size:.76rem"><i class="fas fa-book-bookmark" style="color:var(--primary)"></i> Rule source &amp; verification</b>
+        <div class="src-row"><span>Source</span><b style="font-size:.68rem">${rule.src.n}</b></div>
+        <div class="src-row"><span>Rule version</span><b>${rule.src.v}</b></div>
+        <div class="src-row"><span>Last human review</span><b>${rule.src.rev}</b></div>
+        <div class="src-row"><span>Reviewer</span><b style="font-size:.68rem">${rule.src.by}</b></div>
+        <div style="margin-top:8px"><span class="chip c-green" style="margin:0"><i class="fas fa-user-check"></i> ${rule.src.conf}</span></div>
+      </div>
+    </div>
+    <div style="background:var(--gray-soft);border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:11px;font-size:.66rem;color:var(--muted);line-height:1.5">
+      <i class="fas fa-scale-balanced"></i> Subject to patient eligibility, plan terms and the insurer&rsquo;s final determination — administrative information only, not clinical advice.</div>
+    <div style="display:flex;justify-content:space-between;gap:9px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="document.getElementById('ikResult').style.display='none';document.getElementById('ikForm').style.display=''"><i class="fas fa-arrow-left"></i> Back</button>
+      <div style="display:flex;gap:9px">
+        <button class="btn btn-ghost" onclick="closeM('intakeOvl')">Close without a case</button>
+        <button class="btn btn-pri" onclick="ikCreate()"><i class="fas fa-folder-plus"></i> Create case from this check</button>
+      </div>
+    </div>`;
+}
+function ikCreate() {
+  const { drug, insurer, rule } = ikSel();
+  const plan = document.getElementById('ikPlan').value.trim() ||
+               (insurer.includes('Alberta Public') ? 'AB-Public-Plan' : 'Group-TBC');
+  const id = 'CASE-2026-' + (CASE_SEQ++);
+  const c = mkCase({
+    id, pt: 'PT-' + (PT_SEQ++), drug, insurer, plan, owner: me(),
+    status: 'gathering', created: '2026-08-10', stageSince: '2026-08-10',
+    nextAction: rule.docs.length ? 'Collect required documents' : 'Verify claim readjudicates',
+    missingDocs: rule.docs.slice()
+  });
+  c.tasks = rule.docs.length
+    ? rule.docs.map(d => mkTask(TASK_SEQ++, 'Collect: ' + d, 'Marcus Lee', addD('2026-08-10', 5)))
+    : [mkTask(TASK_SEQ++, 'Verify claim readjudicates cleanly at the counter', 'Marcus Lee', addD('2026-08-10', 2))];
+  if (rule.kind !== 'listed')
+    c.tasks.push(mkTask(TASK_SEQ++, 'Pharmacist review — confirm pathway before submission', 'Priya Shah', addD('2026-08-10', 2), { pri: 'High', reqPharm: true }));
+  CASES.unshift(c);
+  audit(c, `Case created from coverage check ${IK.chk} — ${drug} · ${insurer.replace(' (synthetic)', '')}`, 'case');
+  if (rule.docs.length) audit(c, `Document checklist generated from rule ${rule.src.v} — ${rule.docs.length} item(s) to collect`, 'doc');
+  audit(c, `${c.tasks.length} task(s) auto-generated (SYSTEM)`, 'task');
+  closeM('intakeOvl');
+  WS_FILTER = null;
+  go('workspace');
+  refreshBadges();
+  flashCard(id);
+  toast('🗂️ ' + id + ' created from ' + IK.chk + ' — checklist and tasks generated');
+  openCase(id, 'work');
+}
+
+// ---------- kanban workspace ----------
+let WS_FILTER = null;
+function renderKbFilters() {
+  const el = document.getElementById('kbFilters');
+  const labels = { docs: 'Waiting for documents', expiring: 'Authorization expiring ≤ 30d', overdue: 'Overdue follow-up / insurer response' };
+  let html2 = `<button class="btn btn-pri btn-sm" onclick="intakeOpen()" style="margin-right:4px"><i class="fas fa-cash-register"></i> New case — coverage check</button>`;
+  if (WS_FILTER) html2 += `<span class="filter-chip"><i class="fas fa-filter"></i> ${labels[WS_FILTER] || WS_FILTER} <i class="fas fa-times" onclick="WS_FILTER=null;renderKb()"></i></span>`;
+  html2 += `<span style="font-size:.72rem;color:var(--muted)"><i class="fas fa-hand-pointer" style="color:var(--primary)"></i> ${PERM[ROLE].move ? 'Drag cards between stages to update status.' : 'Your role cannot change case status — open a card to view details.'} Hover a risk label for details.</span>`;
+  el.innerHTML = html2;
+}
+function renderKb() {
+  renderKbFilters();
+  const visible = c => {
+    if (!WS_FILTER) return true;
+    if (WS_FILTER === 'docs') return c.missingDocs.length;
+    if (WS_FILTER === 'expiring') { const d = du(c.authExpiry); return d !== null && d >= 0 && d <= 30; }
+    if (WS_FILTER === 'overdue') return (c.nextFollowUp && du(c.nextFollowUp) < 0) || (c.status === 'submitted' && c.expResp && du(c.expResp) < 0);
+    return true;
+  };
+  document.getElementById('kb').innerHTML = Object.keys(STATUS).map(sk => {
+    const s = STATUS[sk];
+    const cards = CASES.filter(c => c.status === sk && visible(c));
+    return `<div class="kb-col">
+      <div class="kb-head"><span class="kb-dot" style="background:${s.c}"></span>${s.l}<span class="kb-n">${cards.length}</span></div>
+      <div class="kb-body" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="kbDrop(event,'${sk}')">
+      ${cards.map(c => kCard(c)).join('') || '<div class="empty" style="padding:18px 8px;font-size:.7rem">No cases here</div>'}
+      </div></div>`;
+  }).join('');
+}
+function kCard(c) {
+  const r = riskOf(c), ax = du(c.authExpiry), stage = Math.max(0, -du(c.stageSince));
+  return `<div class="kcard" data-cid="${c.id}" draggable="true"
+      ondragstart="event.dataTransfer.setData('text/plain','${c.id}');this.classList.add('drag')"
+      ondragend="this.classList.remove('drag')" onclick="openCase('${c.id}')">
+    <div class="kc-id"><span>${c.id}</span></div>
+    <div class="kc-drug">${esc(c.drug)}</div>
+    <div class="kc-sub">${esc(c.pt)} · ${esc(c.insurer.replace(' (synthetic)', ''))} · ${esc(c.plan)}</div>
+    <div class="kc-next"><i class="fas fa-forward-step"></i>${esc(c.nextAction)}</div>
+    <div style="margin-bottom:7px"><span class="kc-risk" style="background:${r.c}15;color:${r.c}" onmouseenter="riskPop(event,'${c.id}')" onmouseleave="riskPopHide()" onclick="event.stopPropagation()"><span class="risk-dot" style="background:${r.c};margin:0"></span>${r.l}</span></div>
+    <div class="kc-foot">
+      <span><i class="fas fa-clock"></i> ${stage}d in stage</span>
+      ${c.owner ? `<span class="avat" style="background:${TEAM[c.owner].c}" title="${c.owner} — ${TEAM[c.owner].role}">${TEAM[c.owner].s}</span>` : '<span class="chip c-yellow" style="margin:0">Unassigned</span>'}
+    </div></div>`;
+}
+function kbDrop(e, sk) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('over');
+  moveCase(e.dataTransfer.getData('text/plain'), sk);
+}
+function moveCase(id, sk) {
+  const c = findCase(id);
+  if (!c || c.status === sk) return;
+  if (!PERM[ROLE].move) { toast('🔒 Your role cannot change case status'); renderKb(); return; }
+  if ((sk === 'approved' || sk === 'denied') && !PERM[ROLE].finalize) { toast('🔒 Recording approval or denial requires a pharmacist or manager'); renderKb(); return; }
+  const from = STATUS[c.status].l, to = STATUS[sk].l;
+  c.status = sk; c.stageSince = '2026-08-10';
+  if (sk === 'submitted' && !c.submittedDate) { c.submittedDate = '2026-08-10'; c.expResp = addD('2026-08-10', 10); c.nextAction = 'Await insurer decision'; }
+  audit(c, 'Status changed: ' + from + ' → ' + to, 'status');
+  renderKb(); refreshBadges();
+  flashCard(id);
+  toast('↪️ ' + id + ': ' + from + ' → ' + to);
+  if (DW.open && DW.id === id) openCase(id, DW.tab);
+}
+function flashCard(id) {
+  const el = document.querySelector(`[data-cid="${id}"]`);
+  if (el) { el.classList.add('flash'); el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+}
+// ---------- case drawer ----------
+const DW = { open: false, id: null, tab: 'ov' };
+function openCase(id, tab) {
+  const c = findCase(id);
+  if (!c) return;
+  DW.open = true; DW.id = id; DW.tab = tab || 'ov';
+  document.getElementById('dwId').textContent = c.id + ' · ' + c.pt + ' (de-identified)';
+  document.getElementById('dwTitle').textContent = c.drug + ' — ' + (DRUGS[c.drug] ? DRUGS[c.drug].cls : 'synthetic record');
+  document.getElementById('dwSub').textContent = c.insurer + ' · ' + c.plan + ' · ' + c.store;
+  const sel = document.getElementById('dwStatus');
+  sel.innerHTML = Object.keys(STATUS).map(k => `<option value="${k}" ${k === c.status ? 'selected' : ''}>${STATUS[k].l}</option>`).join('');
+  sel.disabled = !PERM[ROLE].move;
+  document.getElementById('dwRoleNote').innerHTML = '<i class="fas fa-user-lock"></i> ' + esc(PERM[ROLE].note);
+  dwRenderAll(c);
+  dwTab(DW.tab);
+  document.getElementById('dwOvl').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer() {
+  DW.open = false;
+  document.getElementById('dwOvl').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+function dwTab(t) {
+  // legacy tab names map onto the three consolidated tabs
+  const map = { docs: 'work', tasks: 'work', comms: 'act', audit: 'act', life: 'ov', overview: 'ov', coverage: 'cov' };
+  t = map[t] || t;
+  DW.tab = t;
+  document.querySelectorAll('.dw-tab').forEach(x => x.classList.toggle('active', x.dataset.t === t));
+  document.querySelectorAll('.dw-pane').forEach(x => x.classList.remove('active'));
+  document.getElementById('dwP-' + t).classList.add('active');
+}
+function dwRenderAll(c) {
+  const sel = document.getElementById('dwStatus');
+  if (sel && DW.id === c.id) { sel.value = c.status; sel.disabled = !PERM[ROLE].move; }
+  dwOv(c); dwCoverage(c); dwDocs(c); dwTasks(c); dwComms(c); dwAudit(c);
+}
+function dwStatusChange(v) {
+  const c = findCase(DW.id);
+  if (!c) return;
+  if (!PERM[ROLE].move) { document.getElementById('dwStatus').value = c.status; toast('🔒 Your role cannot change case status'); return; }
+  moveCase(c.id, v);
+  dwRenderAll(c);
+}
+
+function dwLifeBlock(c) {
+  // lifecycle content, rendered inside the Overview tab
+  const ax = du(c.authExpiry);
+  const riskCat = ax === null ? null
+    : ax < 0 ? 'Expired — action required'
+    : ax <= 14 ? 'Expiring within 14 days' : ax <= 30 ? 'Expiring within 30 days' : ax <= 90 ? 'Expiring within 90 days' : 'Normal';
+  const riskCol = ax === null ? 'c-gray' : ax < 0 || ax <= 14 ? 'c-red' : ax <= 30 ? 'c-orange' : ax <= 90 ? 'c-yellow' : 'c-green';
+  const ms = c.authExpiry ? [
+    ['Approved', true], ['Expiry recorded', true],
+    ['90-day prep reminder', ax <= 90], ['60-day reauth task', ax <= 60],
+    ['30-day escalation', ax <= 30], ['14-day urgent follow-up', ax <= 14],
+    ['Reauth submitted', c.reauthStatus === 'Submitted'], ['New period recorded', false]
+  ] : null;
+  let actions = '';
+  if (c.status === 'ready') actions += `<button class="btn btn-pri btn-sm" onclick="lifeSubmit('${c.id}')"><i class="fas fa-paper-plane"></i> Record submission (via existing insurer channel)</button>`;
+  if (c.status === 'submitted') actions += `
+    <button class="btn btn-ghost btn-sm" onclick="lifeMoreInfo('${c.id}')"><i class="fas fa-file-circle-question"></i> Simulate: insurer requests more information</button>
+    <button class="btn btn-ghost btn-sm" style="border-color:var(--ok);color:var(--ok)" onclick="lifeApprove('${c.id}')"><i class="fas fa-circle-check"></i> Record approval</button>
+    <button class="btn btn-ghost btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="lifeDeny('${c.id}')"><i class="fas fa-circle-xmark"></i> Record denial</button>`;
+  if (c.status === 'info') actions += `<button class="btn btn-pri btn-sm" onclick="lifeResubmit('${c.id}')"><i class="fas fa-rotate-right"></i> Mark resubmitted — back to insurer review</button>`;
+  if (c.status === 'approved' && c.reauthStatus === 'Not started') actions += `<button class="btn btn-pri btn-sm" onclick="lifeReauth('${c.id}')"><i class="fas fa-arrows-spin"></i> Start reauthorization preparation</button>`;
+  if (!riskCat && !actions) return '';
+  return `
+    <div style="border-top:1px solid var(--line);margin:16px 0 14px;padding-top:14px">
+      <b style="font-size:.82rem"><i class="fas fa-rotate" style="color:var(--primary)"></i> Authorization lifecycle</b>
+      ${riskCat ? `<span class="chip ${riskCol}" style="margin:0 0 0 8px">${riskCat}</span>` : ''}
+    </div>
+    ${c.authExpiry || actions ? `<div style="background:var(--warn-soft);border:1px solid #FDE68A;border-radius:10px;padding:10px 13px;margin-bottom:11px;font-size:.72rem;color:#78350F">
+      <i class="fas fa-shield-halved"></i> <b>Administrative authorization risk — pharmacist or prescriber review required.</b> Nothing is renewed automatically; no prescriber is contacted automatically.</div>` : ''}
+    ${ms ? `<div class="ms">${ms.map(m => `<div class="ms-it ${m[1] ? 'done' : ''} ${!m[1] && ms.find(x => !x[1]) === m ? 'now' : ''}">${m[0]}</div>`).join('')}</div>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${actions}</div>`;
+}
+function dwOv(c) {
+  const r = riskOf(c);
+  const rows = [
+    ['Internal Case ID', c.id], ['Patient reference', c.pt + ' <span class="chip c-gray" style="margin:0 0 0 5px">de-identified</span>'],
+    ['Medication', esc(c.drug)], ['DIN / identifier', DRUGS[c.drug] ? DRUGS[c.drug].din : '—'],
+    ['Dosage form', DRUGS[c.drug] ? DRUGS[c.drug].form : '—'], ['Insurer', esc(c.insurer)],
+    ['Plan', esc(c.plan)], ['Case owner', c.owner ? esc(c.owner) : '<span class="chip c-yellow" style="margin:0">Unassigned</span>'],
+    ['Current status', STATUS[c.status].l], ['Created', fdy(c.created)],
+    ['Submitted', c.submittedDate ? fdy(c.submittedDate) : '—'], ['Expected response', c.expResp ? fdy(c.expResp) : '—'],
+    ['Approval date', c.approvalDate ? fdy(c.approvalDate) : '—'], ['Authorization number', c.authNo || '—'],
+    ['Authorization expiry', c.authExpiry ? fdy(c.authExpiry) + ' (' + du(c.authExpiry) + 'd)' : '—'],
+    ['Reauthorization', esc(c.reauthStatus) + (c.reauthOwner ? ' · ' + esc(c.reauthOwner) : '')],
+    ['Next follow-up', c.nextFollowUp ? fdy(c.nextFollowUp) : '—'],
+    ['Risk level', `<span class="chip" style="background:${r.c}18;color:${r.c};margin:0"><span class="risk-dot" style="background:${r.c}"></span>${r.l}</span>`]
+  ];
+  document.getElementById('dwP-ov').innerHTML = `
+    <div class="nba">
+      <div style="font-size:.66rem;font-weight:800;letter-spacing:.6px;color:var(--primary-dark);text-transform:uppercase;margin-bottom:4px"><i class="fas fa-wand-magic-sparkles"></i> Next best administrative action</div>
+      <div style="font-weight:700;font-size:.95rem">${esc(c.nextAction)}</div>
+      <div style="font-size:.68rem;color:#475569;margin-top:4px">Suggested administrative action — pharmacist or coordinator confirmation required.</div>
+    </div>
+    <div class="ov-grid">${rows.map(x => `<div class="ov-row"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+      <span class="lbl" style="margin:0">Reassign owner</span>
+      <select class="inp" style="width:auto" onchange="dwOwner('${c.id}',this.value)" ${PERM[ROLE].assignOthers ? '' : 'disabled title="Your role cannot reassign case owners"'}>
+        <option value="">— unassigned —</option>
+        ${Object.keys(TEAM).map(n => `<option ${n === c.owner ? 'selected' : ''}>${n}</option>`).join('')}</select>
+      ${c.status !== 'closed' ? `<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="dwClose('${c.id}')"><i class="fas fa-box-archive"></i> Close case</button>` : ''}
+    </div>
+    ${c.denialReason ? `<div style="background:var(--danger-soft);border:1px solid #FECACA;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:.8rem"><b style="color:var(--danger)"><i class="fas fa-circle-xmark"></i> Denial reason (from insurer notice):</b> ${esc(c.denialReason)}${c.appealDeadline ? ` · Appeal deadline <b>${fdy(c.appealDeadline)}</b>` : ''}</div>` : ''}
+    ${c.missingDocs.length ? `<div style="background:var(--warn-soft);border:1px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:.8rem"><b style="color:#854D0E"><i class="fas fa-file-circle-question"></i> Waiting for documents:</b> ${c.missingDocs.map(esc).join(' · ')}</div>` : ''}
+    ${dwLifeBlock(c)}`;
+}
+function dwOwner(id, v) {
+  const c = findCase(id);
+  if (!PERM[ROLE].assignOthers) { toast('\ud83d\udd12 Your role cannot reassign case owners'); dwRenderAll(c); return; }
+  audit(c, 'Case owner changed: ' + (c.owner || 'Unassigned') + ' → ' + (v || 'Unassigned'), 'case');
+  c.owner = v || null;
+  dwRenderAll(c); renderKb();
+  toast('👤 ' + id + (v ? ' assigned to ' + v : ' set to unassigned'));
+}
+function dwClose(id) {
+  confirmDlg('Close this case?', 'The case will move to Closed. This is recorded in the audit trail and can be reversed by changing the status back.', () => {
+    moveCase(id, 'closed');
+    dwRenderAll(findCase(id));
+  });
+}
+
+// ----- coverage tab (result shown directly for this case's drug) -----
+function dwCoverage(c) {
+  const { rule, cat } = caseCoverage(c);
+  const st = CV_STATUS[rule.kind];
+  const hasDoc = n => c.docs.some(d => {
+    const a = d.type.toLowerCase(), b = n.toLowerCase();
+    return a === b || b.startsWith(a.split(' ')[0]) || a.startsWith(b.split(' ')[0]);
+  });
+  document.getElementById('dwP-cov').innerHTML = `
+    <div class="cov-hero" style="background:${st.bg};border-color:${st.bd};margin-bottom:14px">
+      <div style="display:flex;gap:13px;align-items:flex-start">
+        <div style="width:42px;height:42px;border-radius:11px;background:#fff;color:${st.c};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0"><i class="fas ${st.i}"></i></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.64rem;font-weight:800;color:${st.c};letter-spacing:.4px">${esc(c.drug).toUpperCase()} · ${cat.toUpperCase()} · ALBERTA (SYNTHETIC)</div>
+          <h3 style="font-size:1.05rem;color:${st.c};margin:2px 0 5px">${st.l}</h3>
+          <p style="font-size:.8rem;line-height:1.55">${esc(rule.phrase)}</p>
+          <div style="margin-top:7px"><span class="chip c-gray"><i class="fas fa-pills"></i> ${DRUGS[c.drug] ? DRUGS[c.drug].din : '—'}</span>
+          ${rule.chips.map(x => `<span class="chip ${x[0]}">${x[1]}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>
+    <div class="cov-two">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card" style="padding:14px"><b style="font-size:.8rem"><i class="fas fa-list-ol" style="color:var(--primary)"></i> Possible requirements</b>
+          ${rule.criteria.length ? rule.criteria.map(x => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:.76rem"><i class="fas fa-angle-right" style="color:var(--primary);margin-top:3px"></i><span>${x}</span></div>`).join('') : '<p style="font-size:.76rem;color:var(--muted);margin-top:6px">No special criteria expected — standard claim adjudication applies.</p>'}</div>
+        <div class="card" style="padding:14px"><b style="font-size:.8rem"><i class="fas fa-file-circle-check" style="color:var(--primary)"></i> Document checklist</b>
+          <p style="font-size:.66rem;color:var(--muted);margin:4px 0 8px">Items check off automatically as matching documents are uploaded to this case. Confirm with the pharmacist and prescribing physician.</p>
+          ${rule.docs.length ? rule.docs.map(x => { const ok = hasDoc(x); return `<div class="doc-check ${ok ? 'done' : ''}" style="cursor:default"><i class="fas ${ok ? 'fa-circle-check' : 'fa-circle'}" style="color:${ok ? 'var(--ok)' : '#CBD5E1'}"></i><span style="flex:1">${x}</span>${ok ? '<span class="chip c-green" style="margin:0">On file</span>' : '<span class="chip c-yellow" style="margin:0">To collect</span>'}</div>`; }).join('') : '<p style="font-size:.76rem;color:var(--muted)">No documents expected for a general-benefit claim.</p>'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card" style="padding:14px"><b style="font-size:.8rem"><i class="fas fa-book-bookmark" style="color:var(--primary)"></i> Rule source &amp; verification</b>
+          <div style="margin-top:6px">
+          <div class="src-row"><span>Source</span><b>${rule.src.n}</b></div>
+          <div class="src-row"><span>Rule version</span><b>${rule.src.v}</b></div>
+          <div class="src-row"><span>Effective date</span><b>${rule.src.eff}</b></div>
+          <div class="src-row"><span>Last human review</span><b>${rule.src.rev}</b></div>
+          <div class="src-row"><span>Reviewer</span><b>${rule.src.by}</b></div></div>
+          <div style="margin-top:9px"><span class="chip c-green"><i class="fas fa-user-check"></i> ${rule.src.conf}</span></div></div>
+        <div class="card" style="padding:14px"><b style="font-size:.8rem"><i class="fas fa-route" style="color:var(--primary)"></i> Possible access pathways</b>
+          <p style="font-size:.66rem;color:var(--muted);margin:4px 0 6px">Administrative reimbursement routes — not clinical treatment advice.</p>
+          ${cvPathways(rule).map(p => `<div style="display:flex;gap:9px;padding:6px 0;border-bottom:1px solid var(--line);font-size:.74rem;align-items:flex-start"><i class="fas ${p[1]}" style="color:var(--teal);margin-top:2px;width:15px"></i><div><b>${p[0]}</b><div style="color:var(--muted);font-size:.68rem">${p[2]}</div></div></div>`).join('')}</div>
+      </div>
+    </div>
+    <div style="background:var(--gray-soft);border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-top:12px;font-size:.68rem;color:var(--muted);line-height:1.55">
+      <i class="fas fa-scale-balanced"></i> This result is subject to patient eligibility, plan terms, and the insurer&rsquo;s final determination. It is administrative information only — not diagnostic, treatment, prescribing, or medication-switching advice.</div>`;
+}
+
+// ----- documents tab -----
+const DOC_TYPES = ['Insurance card', 'Special-authorization form', 'Prescriber support letter', 'Denial notice', 'Approval notice', 'Patient consent', 'Appeal document', 'Renewal document', 'Insurer response'];
+function dwDocs(c) {
+  const canDel = PERM[ROLE].del, canVer = PERM[ROLE].finalize;
+  document.getElementById('dwDocN').textContent = c.docs.length;
+  document.getElementById('dwSecDocs').innerHTML = `
+    <b style="font-size:.85rem;display:block;margin-bottom:8px"><i class="fas fa-file-shield" style="color:var(--primary)"></i> Documents</b>`;
+  document.getElementById('dwSecDocs').innerHTML += `
+    <p style="font-size:.72rem;color:var(--muted);margin-bottom:10px"><i class="fas fa-code-branch" style="color:var(--primary)"></i> <span data-tip="Uploading the same document type again creates a new version (v2, v3…) instead of replacing the previous file.">Version control</span>: a new upload of the same type creates a new version. Uploads are simulated.</p>
+    ${c.docs.map((d, i) => `
+      <div class="doc-item">
+        <i class="fas fa-file-pdf" style="font-size:1.15rem;color:${d.ver === 'Verified' ? 'var(--ok)' : 'var(--warn)'}"></i>
+        <div style="flex:1"><b>${d.type}</b> <span class="chip c-indigo" style="margin:0">v${d.v}</span>
+          ${d.task ? `<span class="chip c-gray" style="margin:0 0 0 4px" title="Linked task">${d.task}</span>` : ''}
+          <div style="font-size:.68rem;color:var(--muted)">Uploaded by ${esc(d.by)} · ${fd(d.d)}</div></div>
+        <span class="chip ${d.ver === 'Verified' ? 'c-green' : 'c-yellow'}" style="margin:0">${d.ver}</span>
+        ${d.ver !== 'Verified' && canVer ? `<button class="btn btn-ghost btn-sm" onclick="dwVerify('${c.id}',${i})"><i class="fas fa-user-check"></i> Verify</button>` : ''}
+        ${canDel ? `<i class="fas fa-trash-can" title="Delete (requires permission)" style="color:var(--danger);cursor:pointer;padding:4px" onclick="dwDelDoc('${c.id}',${i})"></i>` : `<i class="fas fa-lock" title="Your role cannot delete documents" style="color:#CBD5E1;padding:4px"></i>`}
+      </div>`).join('') || '<div class="empty"><i class="fas fa-file-circle-question"></i>No documents yet — simulate an upload below.</div>'}
+    <div class="card" style="margin-top:12px;background:var(--gray-soft)">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="inp" id="dwDocType" style="width:auto">${DOC_TYPES.map(t => `<option>${t}</option>`).join('')}</select>
+        <button class="btn btn-pri btn-sm" onclick="dwUpload('${c.id}')"><i class="fas fa-cloud-arrow-up"></i> Upload document (simulated)</button>
+        <button class="btn btn-ghost btn-sm" onclick="dwUpload('${c.id}','Insurer response','fax')"><i class="fas fa-fax"></i> Simulate fax received</button>
+        <button class="btn btn-ghost btn-sm" onclick="dwUpload('${c.id}','Prescriber support letter')"><i class="fas fa-file-medical"></i> Add prescriber letter</button>
+        <button class="btn btn-ghost btn-sm" onclick="dwUpload('${c.id}','Insurer response')"><i class="fas fa-building-shield"></i> Add insurer response</button>
+      </div>
+    </div>`;
+}
+function dwUpload(id, forceType, via) {
+  const c = findCase(id);
+  const type = forceType || document.getElementById('dwDocType').value;
+  const v = Math.max(0, ...c.docs.filter(d => d.type === type).map(d => d.v)) + 1;
+  c.docs.unshift({ type, v, by: me(), d: '2026-08-10', ver: 'Pending review', task: null });
+  c.missingDocs = c.missingDocs.filter(m => !type.toLowerCase().includes(m.split(' ')[0].toLowerCase()) && !m.toLowerCase().includes(type.split(' ')[0].toLowerCase()));
+  audit(c, (via === 'fax' ? 'Fax received (simulated): ' : 'Uploaded ') + type + ' (v' + v + ')', 'doc');
+  dwDocs(c); dwOv(c); dwCoverage(c); renderKb(); refreshBadges();
+  toast('📄 ' + type + ' saved as v' + v + ' — pending review');
+}
+function dwVerify(id, i) {
+  const c = findCase(id);
+  c.docs[i].ver = 'Verified';
+  audit(c, 'Verified document: ' + c.docs[i].type + ' (v' + c.docs[i].v + ')', 'doc');
+  dwDocs(c); refreshBadges(); renderDocsPage();
+  toast('✅ ' + c.docs[i].type + ' verified');
+}
+function dwDelDoc(id, i) {
+  if (!PERM[ROLE].del) { toast('🔒 Your role cannot delete documents'); return; }
+  const c = findCase(id), d = c.docs[i];
+  confirmDlg('Delete document?', 'Delete ' + d.type + ' (v' + d.v + ')? This action is recorded in the audit trail.', () => {
+    c.docs.splice(i, 1);
+    audit(c, 'Deleted document: ' + d.type + ' (v' + d.v + ')', 'doc');
+    dwDocs(c); dwCoverage(c); refreshBadges(); renderDocsPage();
+    toast('🗑️ ' + d.type + ' deleted (audited)');
+  });
+}
+
+// ----- tasks tab -----
+function dwTasks(c) {
+  document.getElementById('dwTaskN').textContent = c.tasks.filter(t => t.status === 'Open').length;
+  document.getElementById('dwSecTasks').innerHTML = `
+    <b style="font-size:.85rem;display:block;margin-bottom:8px"><i class="fas fa-list-check" style="color:var(--primary)"></i> Tasks</b>`;
+  document.getElementById('dwSecTasks').innerHTML += `
+    ${c.tasks.map((t, i) => `
+      <div class="task-item ${t.status === 'Done' ? 'done' : ''}">
+        <input type="checkbox" ${t.status === 'Done' ? 'checked' : ''} onchange="dwTaskT('${c.id}',${i})" style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer">
+        <div style="flex:1"><span class="tt">${esc(t.title)}</span>
+          <div style="font-size:.66rem;color:var(--muted)">${t.id} · due ${fd(t.due)} · created by ${esc(t.by)}</div></div>
+        ${t.pri === 'High' ? '<span class="chip c-red" style="margin:0">HIGH</span>' : ''}
+        <span class="chip ${t.origin === 'SYSTEM' ? 'c-indigo' : 'c-gray'}" style="margin:0" data-tip="${t.origin === 'SYSTEM' ? 'Created automatically (e.g. from a coverage check or expiry monitor).' : 'Created manually by a staff member.'}">${t.origin === 'SYSTEM' ? 'SYSTEM-GENERATED' : 'MANUAL'}</span>
+        ${t.reqPharm ? '<span class="chip c-red" style="margin:0">REQUIRES PHARMACIST REVIEW</span>' : ''}
+        <span class="avat" style="background:${TEAM[t.who] ? TEAM[t.who].c : '#64748B'}" title="${t.who}">${TEAM[t.who] ? TEAM[t.who].s : '?'}</span>
+      </div>`).join('') || '<div class="empty"><i class="fas fa-list-check"></i>No tasks yet — add the first one below.</div>'}
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <select class="inp" id="dwTaskType" style="flex:1;min-width:220px">
+        ${['Contact prescriber', 'Request missing chart document', 'Confirm patient consent', 'Prepare special-authorization package', 'Submit to insurer', 'Follow up with insurer', 'Prepare appeal documents', 'Confirm authorization expiry', 'Start reauthorization preparation'].map(t => `<option>${t}</option>`).join('')}</select>
+      <select class="inp" id="dwTaskWho" style="width:auto">${(PERM[ROLE].assignOthers ? Object.keys(TEAM) : [me()]).map(n => `<option>${n}</option>`).join('')}</select>
+      <button class="btn btn-pri btn-sm" onclick="dwAddTask('${c.id}')"><i class="fas fa-plus"></i> Add task</button>
+      ${PERM[ROLE].assignOthers ? '' : '<span style="font-size:.64rem;color:var(--muted);align-self:center"><i class="fas fa-lock"></i> Technicians assign tasks to themselves only</span>'}
+    </div>`;
+}
+function dwAddTask(id) {
+  const c = findCase(id);
+  const title = document.getElementById('dwTaskType').value, who = document.getElementById('dwTaskWho').value;
+  if (!PERM[ROLE].assignOthers && who !== me()) { toast('\ud83d\udd12 Technicians can assign tasks to themselves only'); return; }
+  c.tasks.push(mkTask(TASK_SEQ++, title, who, '2026-08-14', { origin: 'MANUAL', by: me(), reqPharm: title === 'Prepare appeal documents' }));
+  audit(c, 'Task added (manual): ' + title + ' → ' + who, 'task');
+  dwTasks(c); renderKb(); refreshBadges();
+  toast('👤 Task assigned to ' + who);
+}
+function dwTaskT(id, i) {
+  const c = findCase(id), t = c.tasks[i];
+  if (t.reqPharm && !PERM[ROLE].pharmTask && t.status === 'Open') {
+    toast('🔒 This task requires pharmacist review — only a pharmacist or manager can complete it');
+    dwTasks(c); return;
+  }
+  t.status = t.status === 'Open' ? 'Done' : 'Open';
+  audit(c, 'Task ' + (t.status === 'Done' ? 'completed' : 'reopened') + ': ' + t.title, 'task');
+  dwTasks(c); renderKb(); refreshBadges(); renderTasksPage();
+}
+
+// ----- communications tab -----
+const COMM_TYPES = ['Phone', 'Fax', 'Email', 'Insurer portal', 'Prescriber portal', 'In-person', 'Internal note'];
+const COMM_ICON = { Phone: 'fa-phone', Fax: 'fa-fax', Email: 'fa-envelope', 'Insurer portal': 'fa-building-shield', 'Prescriber portal': 'fa-user-doctor', 'In-person': 'fa-handshake', 'Internal note': 'fa-note-sticky' };
+const OUTCOMES = ['Prescriber office requested another copy', 'Insurer confirmed receipt', 'Insurer requested additional documentation', 'No answer — follow up in two business days', 'Approval notice received', 'Left message with reception', 'Patient consent confirmed'];
+function dwComms(c) {
+  document.getElementById('dwSecComms').innerHTML = `
+    <b style="font-size:.85rem;display:block;margin-bottom:8px"><i class="fas fa-phone-volume" style="color:var(--primary)"></i> Communications</b>`;
+  document.getElementById('dwSecComms').innerHTML += `
+    ${c.comms.map(m => `
+      <div class="comm-item">
+        <div style="width:32px;height:32px;border-radius:9px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ${COMM_ICON[m.type] || 'fa-phone'}"></i></div>
+        <div style="flex:1"><b>${m.type}</b> — ${esc(m.party)} <span class="chip c-teal" style="margin:0 0 0 5px">${esc(m.outcome)}</span>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:2px">${m.dt} · ${esc(m.staff)}${m.fu ? ' · follow-up ' + fd(m.fu) : ''}${m.att ? ' · <i class="fas fa-paperclip"></i> ' + esc(m.att) : ''}</div></div>
+      </div>`).join('') || '<div class="empty"><i class="fas fa-phone-volume"></i>No communications logged yet.</div>'}
+    <div class="card" style="margin-top:12px;background:var(--gray-soft)">
+      <b style="font-size:.76rem;display:block;margin-bottom:8px"><i class="fas fa-plus" style="color:var(--primary)"></i> Log a communication</b>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select class="inp" id="dwCmType" style="width:auto">${COMM_TYPES.map(t => `<option>${t}</option>`).join('')}</select>
+        <input class="inp" id="dwCmParty" placeholder="Contacted party" style="flex:1;min-width:150px">
+        <select class="inp" id="dwCmOut" style="width:auto;max-width:240px">${OUTCOMES.map(o => `<option>${o}</option>`).join('')}</select>
+        <input class="inp" id="dwCmFu" placeholder="Follow-up (YYYY-MM-DD)" style="width:170px">
+        <button class="btn btn-pri btn-sm" onclick="dwAddComm('${c.id}')"><i class="fas fa-plus"></i> Log</button>
+      </div>
+    </div>`;
+}
+function dwAddComm(id) {
+  const c = findCase(id);
+  const type = document.getElementById('dwCmType').value;
+  const party = document.getElementById('dwCmParty').value.trim() || (type === 'Internal note' ? '—' : c.insurer);
+  const out = document.getElementById('dwCmOut').value;
+  const fu = document.getElementById('dwCmFu').value.trim() || null;
+  c.comms.unshift({ dt: nowStr(), type, party, staff: me(), outcome: out, fu, att: null });
+  if (fu) c.nextFollowUp = fu;
+  audit(c, 'Logged communication: ' + type + ' — ' + out, 'comm');
+  dwComms(c); dwOv(c);
+  toast('📞 Communication logged: ' + type);
+}
+
+// ----- authorization lifecycle actions -----
+function lifeSubmit(id) {
+  const c = findCase(id);
+  c.status = 'submitted'; c.stageSince = '2026-08-10'; c.submittedDate = '2026-08-10';
+  c.expResp = addD('2026-08-10', 10); c.nextAction = 'Await insurer decision'; c.nextFollowUp = addD('2026-08-10', 7);
+  c.comms.unshift({ dt: nowStr(), type: 'Insurer portal', party: c.insurer, staff: me(), outcome: 'SA package submitted via existing insurer portal', fu: c.nextFollowUp, att: 'SA package (simulated)' });
+  audit(c, 'Submission recorded via existing insurer channel — status: Submitted — insurer review', 'status');
+  dwRenderAll(c); renderKb(); refreshBadges(); flashCard(id);
+  toast('📤 ' + id + ' recorded as submitted (existing insurer channel)');
+}
+function lifeMoreInfo(id) {
+  const c = findCase(id);
+  c.status = 'info'; c.stageSince = '2026-08-10';
+  c.missingDocs = ['Additional documentation requested by insurer'];
+  c.nextAction = 'Review missing document';
+  c.tasks.push(mkTask(TASK_SEQ++, 'Request missing chart document', 'Marcus Lee', addD('2026-08-10', 3)));
+  c.comms.unshift({ dt: nowStr(), type: 'Insurer portal', party: c.insurer, staff: me(), outcome: 'Insurer requested additional documentation', fu: addD('2026-08-10', 3), att: 'Request letter (simulated)' });
+  audit(c, 'Insurer requested additional documentation (simulated) — status: Needs more information; task generated', 'status');
+  dwRenderAll(c); renderKb(); refreshBadges(); flashCard(id);
+  toast('📨 ' + id + ': insurer requested more information — task created');
+}
+function lifeResubmit(id) {
+  const c = findCase(id);
+  c.status = 'submitted'; c.stageSince = '2026-08-10'; c.missingDocs = [];
+  c.nextAction = 'Await insurer decision'; c.expResp = addD('2026-08-10', 8);
+  audit(c, 'Additional information provided — status: Submitted — insurer review', 'status');
+  dwRenderAll(c); renderKb(); refreshBadges(); flashCard(id);
+  toast('🔁 ' + id + ' resubmitted to insurer review');
+}
+function lifeApprove(id) {
+  if (!PERM[ROLE].finalize) { toast('🔒 Recording approval requires a pharmacist or manager'); return; }
+  DW.id = id;
+  document.getElementById('apNo').value = 'SYN-AUTH-' + (91000 + Math.floor(Math.random() * 900));
+  document.getElementById('apExp').value = '2026-11-05';
+  document.getElementById('apNote').value = '';
+  document.getElementById('apErr').style.display = 'none';
+  openM('apprOvl');
+}
+function apSave() {
+  const c = findCase(DW.id);
+  const exp = document.getElementById('apExp').value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(exp) || du(exp) <= 0) { document.getElementById('apErr').style.display = 'block'; return; }
+  closeM('apprOvl');
+  c.status = 'approved'; c.stageSince = '2026-08-10'; c.approvalDate = '2026-08-10';
+  c.authNo = document.getElementById('apNo').value; c.authStart = '2026-08-10'; c.authExpiry = exp;
+  c.reauthStatus = 'Not started'; c.nextAction = 'Monitor authorization expiry'; c.nextFollowUp = addD(exp, -60);
+  c.docs.unshift({ type: 'Approval notice', v: c.docs.filter(d => d.type === 'Approval notice').length + 1, by: me(), d: '2026-08-10', ver: 'Verified', task: null });
+  c.tasks.push(mkTask(TASK_SEQ++, 'Start reauthorization preparation', c.owner || 'Dana Whitfield', addD(exp, -60)));
+  c.comms.unshift({ dt: nowStr(), type: 'Insurer portal', party: c.insurer, staff: me(), outcome: 'Approval notice received', fu: null, att: 'Approval notice (simulated)' });
+  audit(c, 'Approval recorded: ' + c.authNo + ', authorization expires ' + fdy(exp) + ' — reauthorization task scheduled 60 days before expiry', 'status');
+  dwRenderAll(c); renderKb(); refreshBadges(); flashCard(c.id);
+  toast('🎉 ' + c.id + ' approved — expiry ' + fdy(exp) + ' now monitored');
+}
+function lifeDeny(id) {
+  if (!PERM[ROLE].finalize) { toast('🔒 Recording a denial requires a pharmacist or manager'); return; }
+  DW.id = id;
+  document.getElementById('dnDeadline').value = addD('2026-08-10', 30);
+  openM('denyOvl');
+}
+function dnSave() {
+  const c = findCase(DW.id);
+  closeM('denyOvl');
+  c.status = 'denied'; c.stageSince = '2026-08-10';
+  c.denialReason = document.getElementById('dnReason').value;
+  c.appealDeadline = document.getElementById('dnDeadline').value;
+  c.nextAction = 'Prepare appeal documents';
+  c.docs.unshift({ type: 'Denial notice', v: 1, by: me(), d: '2026-08-10', ver: 'Verified', task: null });
+  c.tasks.push(mkTask(TASK_SEQ++, 'Prepare appeal documents', 'Priya Shah', addD('2026-08-10', 10), { pri: 'High', reqPharm: true }));
+  audit(c, 'Denial recorded (' + c.denialReason + ') — appeal deadline ' + fdy(c.appealDeadline) + '; appeal task requires pharmacist review', 'status');
+  dwRenderAll(c); renderKb(); refreshBadges();
+  toast('📕 ' + c.id + ' denial recorded — appeal preparation task created');
+}
+function lifeReauth(id) {
+  const c = findCase(id);
+  c.reauthStatus = 'In progress'; c.reauthOwner = me(); c.reauthStart = '2026-08-10';
+  c.nextAction = 'Prepare reauthorization package';
+  c.tasks.push(mkTask(TASK_SEQ++, 'Prepare special-authorization package', me(), addD('2026-08-10', 7)));
+  audit(c, 'Reauthorization preparation started (administrative workflow — pharmacist/prescriber review required)', 'case');
+  dwRenderAll(c); renderKb(); refreshBadges();
+  toast('🔄 Reauthorization preparation started for ' + id);
+}
+
+// ----- audit tab -----
+function dwAudit(c) {
+  document.getElementById('dwSecAudit').innerHTML = `
+    <b style="font-size:.85rem;display:block;margin-bottom:10px"><i class="fas fa-clock-rotate-left" style="color:var(--primary)"></i> Audit trail</b>`;
+  document.getElementById('dwSecAudit').innerHTML += `
+    <div class="tl">${c.audit.map((e, i) => `
+      <div class="tl-it ${i > 0 ? 'mut' : ''}">
+        <div style="font-size:.66rem;color:var(--muted)">${e.t} · <b style="color:var(--ink)">${esc(e.w)}</b> (${esc(e.r)})</div>
+        <div>${esc(e.a)}</div>
+      </div>`).join('') || '<p style="font-size:.8rem;color:var(--muted)">No events recorded yet.</p>'}</div>
+    <p style="font-size:.68rem;color:var(--muted);margin-top:6px"><i class="fas fa-shield-halved" style="color:var(--primary)"></i> An audit event is recorded whenever a status, document, task, communication or important field changes.</p>`;
+}
+// ---------- per-case risks (card labels + hover details) ----------
+function caseRisks(c) {
+  const out = [];
+  const ax = du(c.authExpiry);
+  if (ax !== null && c.status !== 'closed') {
+    if (ax < 0) out.push({ l: 'Authorization expired ' + (-ax) + 'd ago — action required', sev: '#DC2626' });
+    else if (ax <= 14) out.push({ l: 'Authorization expires within 14 days (' + fdy(c.authExpiry) + ')', sev: '#DC2626' });
+    else if (ax <= 30) out.push({ l: 'Authorization expires within 30 days (' + fdy(c.authExpiry) + ')', sev: '#EA580C' });
+    else if (ax <= 90) out.push({ l: 'Authorization expires within 90 days (' + fdy(c.authExpiry) + ')', sev: '#CA8A04' });
+    if (ax <= 60 && c.reauthStatus === 'Not started') out.push({ l: 'Reauthorization not started', sev: '#EA580C' });
+  }
+  if (c.missingDocs.length) out.push({ l: 'Documents missing: ' + c.missingDocs.join(', '), sev: '#CA8A04' });
+  if (c.status === 'submitted' && c.expResp && du(c.expResp) < 0) out.push({ l: 'Insurer response overdue — expected ' + fdy(c.expResp), sev: '#DC2626' });
+  if (c.nextFollowUp && du(c.nextFollowUp) < 0 && c.status !== 'closed') out.push({ l: 'Follow-up overdue — was due ' + fdy(c.nextFollowUp), sev: '#EA580C' });
+  if (c.status === 'denied' && c.appealDeadline) out.push({ l: 'Appeal deadline ' + fdy(c.appealDeadline) + ' (' + du(c.appealDeadline) + 'd left)', sev: '#DC2626' });
+  if (!c.owner && c.status !== 'closed') out.push({ l: 'No owner assigned', sev: '#CA8A04' });
+  return out;
+}
+function riskPop(e, cid) {
+  const c = findCase(cid);
+  if (!c) return;
+  const items = caseRisks(c);
+  const el = document.getElementById('riskPop');
+  el.innerHTML = '<b><i class="fas fa-triangle-exclamation"></i> ' + c.id + ' — risk details</b>' +
+    (items.length ? items.map(i => '• ' + esc(i.l)).join('<br>') : '• No active risks — normal') +
+    '<div style="color:#94A3B8;margin-top:6px;font-size:.64rem">Administrative risk only — pharmacist or prescriber review required.</div>';
+  const r = e.currentTarget.getBoundingClientRect();
+  el.style.display = 'block';
+  el.style.left = Math.min(r.left, window.innerWidth - 300) + 'px';
+  el.style.top = Math.min(r.bottom + 8, window.innerHeight - 180) + 'px';
+}
+function riskPopHide() { document.getElementById('riskPop').style.display = 'none'; }
+
+// ---------- documents page ----------
+function renderDocsPage() {
+  if (!document.getElementById('docsBody')) return;
+  const tf = document.getElementById('docFType');
+  if (tf && tf.options.length === 1) tf.innerHTML += DOC_TYPES.map(t => `<option>${t}</option>`).join('');
+  const ft = tf ? tf.value : '', fv = document.getElementById('docFVer') ? document.getElementById('docFVer').value : '';
+  const docs = allDocs().filter(d => (!ft || d.type === ft) && (!fv || d.ver === fv));
+  const canVer = PERM[ROLE].finalize, canDel = PERM[ROLE].del;
+  document.getElementById('docsBody').innerHTML = docs.length ? docs.map(d => `
+    <tr>
+      <td><b>${d.type}</b></td>
+      <td><a style="color:var(--primary);font-weight:700;cursor:pointer" onclick="openCase('${d.cid}','docs')">${d.cid}</a></td>
+      <td><span class="chip c-indigo" style="margin:0">v${d.v}</span></td>
+      <td>${esc(d.by)}</td><td>${fd(d.d)}</td>
+      <td><span class="chip ${d.ver === 'Verified' ? 'c-green' : 'c-yellow'}" style="margin:0">${d.ver}</span></td>
+      <td style="white-space:nowrap">
+        ${d.ver !== 'Verified' && canVer ? `<button class="btn btn-ghost btn-sm" onclick="dwVerify('${d.cid}',${d.idx});renderDocsPage()"><i class="fas fa-user-check"></i> Verify</button>` : ''}
+        ${canDel ? `<button class="btn btn-danger btn-sm" onclick="pgDelDoc('${d.cid}',${d.idx})"><i class="fas fa-trash-can"></i></button>` : `<i class="fas fa-lock" title="Your role cannot delete documents" style="color:#CBD5E1"></i>`}
+      </td>
+    </tr>`).join('') : '<tr><td colspan="7"><div class="empty"><i class="fas fa-file-circle-question"></i>No documents match these filters.</div></td></tr>';
+}
+function pgDelDoc(cid, idx) {
+  const c = findCase(cid), d = c.docs[idx];
+  confirmDlg('Delete document?', 'Delete ' + d.type + ' (v' + d.v + ') from ' + cid + '? This action is recorded in the audit trail.', () => {
+    c.docs.splice(idx, 1);
+    audit(c, 'Deleted document: ' + d.type + ' (v' + d.v + ')', 'doc');
+    renderDocsPage(); refreshBadges();
+    toast('🗑️ Document deleted (audited)');
+  });
+}
+
+// ---------- tasks page ----------
+function renderTasksPage() {
+  if (!document.getElementById('tasksBody')) return;
+  const wf = document.getElementById('tkFWho');
+  if (wf && wf.options.length === 1) wf.innerHTML += Object.keys(TEAM).map(n => `<option>${n}</option>`).join('');
+  const w = wf ? wf.value : '', s = document.getElementById('tkFStatus') ? document.getElementById('tkFStatus').value : '', o = document.getElementById('tkFOrigin') ? document.getElementById('tkFOrigin').value : '';
+  const tasks = allTasks().filter(t => (!w || t.who === w) && (!s || t.status === s) && (!o || t.origin === o))
+    .sort((a, b) => (a.status === 'Open' ? 0 : 1) - (b.status === 'Open' ? 0 : 1) || D(a.due) - D(b.due));
+  document.getElementById('tasksBody').innerHTML = tasks.length ? tasks.map(t => {
+    const c = findCase(t.cid), i = c.tasks.findIndex(x => x.id === t.id);
+    const overdue = t.status === 'Open' && du(t.due) < 0;
+    return `<tr>
+      <td><input type="checkbox" ${t.status === 'Done' ? 'checked' : ''} onchange="dwTaskT('${t.cid}',${i});renderTasksPage()" style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer"></td>
+      <td><b style="${t.status === 'Done' ? 'text-decoration:line-through;opacity:.6' : ''}">${esc(t.title)}</b>
+        ${t.reqPharm ? '<span class="chip c-red" style="margin:0 0 0 5px">REQUIRES PHARMACIST REVIEW</span>' : ''}
+        <div style="font-size:.66rem;color:var(--muted)">${t.id}</div></td>
+      <td><a style="color:var(--primary);font-weight:700;cursor:pointer" onclick="openCase('${t.cid}','tasks')">${t.cid}</a></td>
+      <td><span class="avat" style="background:${TEAM[t.who] ? TEAM[t.who].c : '#64748B'};margin-right:5px">${TEAM[t.who] ? TEAM[t.who].s : '?'}</span>${esc(t.who)}</td>
+      <td style="${overdue ? 'color:var(--danger);font-weight:700' : ''}">${fd(t.due)}${overdue ? ' ⚠' : ''}</td>
+      <td>${t.pri === 'High' ? '<span class="chip c-red" style="margin:0">High</span>' : '<span class="chip c-gray" style="margin:0">Normal</span>'}</td>
+      <td><span class="chip ${t.origin === 'SYSTEM' ? 'c-indigo' : 'c-gray'}" style="margin:0">${t.origin === 'SYSTEM' ? 'SYSTEM-GENERATED' : 'MANUAL'}</span></td>
+      <td style="font-size:.72rem;color:var(--muted)">${esc(t.by)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8"><div class="empty"><i class="fas fa-list-check"></i>No tasks match these filters.</div></td></tr>';
+}
+
+// ---------- reports ----------
+function renderReports() {
+  const open = openCases();
+  const tiles = [
+    ['3.2d', 'Avg. creation → submission', 'fa-stopwatch', 'var(--primary-soft)', 'var(--primary)'],
+    ['9.4d', 'Avg. submission → decision', 'fa-hourglass-half', 'var(--teal-soft)', 'var(--teal)'],
+    ['22%', 'Missing-document rate', 'fa-file-circle-question', 'var(--warn-soft)', '#A16207'],
+    ['92%', 'Follow-up completion', 'fa-bell', 'var(--ok-soft)', 'var(--ok)'],
+    ['41', 'Cases completed (90 days)', 'fa-circle-check', 'var(--primary-soft)', 'var(--primary)'],
+    [String(cntWaitingDocs() + open.filter(c => c.status === 'info').length), 'Cases waiting for action', 'fa-triangle-exclamation', 'var(--orange-soft)', 'var(--orange)']
+  ];
+  document.getElementById('repTiles').innerHTML = tiles.map(t => `
+    <div class="stat" style="cursor:default"><div class="stat-ic" style="background:${t[3]};color:${t[4]}"><i class="fas ${t[2]}"></i></div>
+    <div><div class="stat-n" style="font-size:1.25rem">${t[0]}</div><div class="stat-l">${t[1]}</div></div></div>`).join('');
+
+  const counts = Object.keys(STATUS).map(k => ({ k, n: CASES.filter(c => c.status === k).length }));
+  const mx = Math.max(...counts.map(x => x.n), 1);
+  const byOwner = Object.keys(TEAM).map(n => ({ n, v: open.filter(c => c.owner === n).length }));
+  const byIns = INSURERS.map(n => ({ n: n.replace(' (synthetic)', ''), v: open.filter(c => c.insurer === n).length })).filter(x => x.v);
+  const denials = [['Prior therapy not documented (demo)', 38], ['Missing chart documentation (demo)', 27], ['Plan exclusion — verification needed (demo)', 20], ['Incomplete form (demo)', 15]];
+  const missing = [['Patient consent', 14], ['Prescriber chart notes', 11], ['Prescriber support letter', 9], ['Baseline lab reports', 7]];
+  const overdueFu = open.filter(c => c.nextFollowUp && du(c.nextFollowUp) < 0);
+  const exp30 = open.filter(c => { const d = du(c.authExpiry); return d !== null && d >= 0 && d <= 30; });
+  document.getElementById('repGrid').innerHTML = `
+    <div class="card"><div class="card-title"><i class="fas fa-chart-column"></i> Open cases by status</div>
+      <div class="bar-wrap">${counts.map(x => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end">
+          <b style="font-size:.72rem;color:${STATUS[x.k].c}">${x.n}</b>
+          <div class="rep-bar" style="background:${STATUS[x.k].c}" data-h="${Math.round(x.n / mx * 120) + 4}"></div>
+          <span style="font-size:.56rem;color:var(--muted);text-align:center">${STATUS[x.k].l.split(' ')[0]}</span>
+        </div>`).join('')}</div></div>
+    <div class="card"><div class="card-title"><i class="fas fa-circle-xmark" style="color:var(--danger)"></i> Denial reasons (synthetic, 90 days)</div>
+      ${denials.map(d => `<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:.78rem"><span style="font-weight:600">${d[0]}</span><b>${d[1]}%</b></div>
+      <div class="meter"><div style="background:var(--danger)" data-w="${d[1] * 2}%"></div></div></div>`).join('')}
+      <p style="font-size:.68rem;color:var(--muted)">Use these to improve intake checklists — most demo denials are preventable at submission time.</p></div>
+    <div class="card"><div class="card-title"><i class="fas fa-file-circle-question"></i> Most frequently missing documents (synthetic)</div>
+      ${missing.map(m => `<div class="mini-row"><span style="font-weight:600">${m[0]}</span><span class="chip c-orange" style="margin:0">${m[1]} cases</span></div>`).join('')}
+      <div class="card-title" style="margin-top:16px"><i class="fas fa-bell" style="color:var(--danger)"></i> Overdue insurer follow-ups (live)</div>
+      ${overdueFu.length ? overdueFu.map(c => `<div class="mini-row"><a style="color:var(--primary);font-weight:700;cursor:pointer" onclick="openCase('${c.id}')">${c.id}</a><span>${esc(c.drug)} · due ${fd(c.nextFollowUp)}</span></div>`).join('') : '<p style="font-size:.75rem;color:var(--muted)">None right now.</p>'}</div>
+    <div class="card"><div class="card-title"><i class="fas fa-calendar-xmark" style="color:var(--orange)"></i> Authorizations expiring ≤ 30 days (live)</div>
+      ${exp30.map(c => `<div class="mini-row"><a style="color:var(--primary);font-weight:700;cursor:pointer" onclick="openCase('${c.id}','life')">${c.id}</a><span>${esc(c.drug)} · ${fdy(c.authExpiry)} (${du(c.authExpiry)}d)</span></div>`).join('') || '<p style="font-size:.75rem;color:var(--muted)">None within 30 days.</p>'}
+      <div class="card-title" style="margin-top:16px"><i class="fas fa-users"></i> Open cases by owner (live)</div>
+      ${PERM[ROLE].supervise ? byOwner.map(o => `<div class="mini-row"><span><span class="avat" style="background:${TEAM[o.n].c};margin-right:6px">${TEAM[o.n].s}</span>${o.n}</span><b>${o.v}</b></div>`).join('') : '<div style="font-size:.74rem;color:var(--muted);padding:8px 0"><i class="fas fa-lock"></i> Supervisor view — workload by staff member is visible to the pharmacist and manager roles.</div>'}
+      <div class="mini-row"><span><span class="chip c-yellow" style="margin:0">Unassigned</span></span><b>${open.filter(c => !c.owner).length}</b></div></div>
+    <div class="card"><div class="card-title"><i class="fas fa-building-shield"></i> Open cases by insurer (live)</div>
+      ${byIns.map(o => `<div class="mini-row"><span style="font-weight:600">${o.n}</span><b>${o.v}</b></div>`).join('')}</div>
+    <div class="card"><div class="card-title"><i class="fas fa-clock-rotate-left"></i> Audit activity</div>
+      <div class="mini-row"><span>Events recorded (all time, demo)</span><b>${GLOBAL_AUDIT.length + CASES.reduce((n, c) => n + c.audit.length, 0)}</b></div>
+      <div class="mini-row"><span>Events today</span><b>${GLOBAL_AUDIT.filter(e => e.t.startsWith('Aug 10')).length}</b></div>
+      <p style="font-size:.68rem;color:var(--muted);margin-top:8px">These figures are synthetic demo data and do not represent real pharmacy performance.</p></div>`;
+  setTimeout(() => {
+    document.querySelectorAll('.rep-bar').forEach(b => b.style.height = b.dataset.h + 'px');
+    document.querySelectorAll('.meter div').forEach(m => m.style.width = m.dataset.w);
+  }, 80);
+}
+
+// ---------- audit page ----------
+function renderAuditPage() {
+  const el = document.getElementById('auditBody');
+  if (!el) return;
+  const fSel = document.getElementById('auFType');
+  if (fSel) fSel.disabled = !PERM[ROLE].supervise;
+  if (!PERM[ROLE].supervise) {
+    el.innerHTML = '<tr><td colspan="5"><div class="empty"><i class="fas fa-lock"></i>Supervisor view — the global audit log is available to the pharmacist and manager roles.<br><span style="font-size:.7rem">Each case\u2019s own activity remains visible to everyone in its Activity tab.</span></div></td></tr>';
+    return;
+  }
+  const f = fSel ? fSel.value : '';
+  const rows = GLOBAL_AUDIT.filter(e => !f || e.k === f);
+  el.innerHTML = rows.length ? rows.map(e => `
+    <tr><td style="white-space:nowrap">${e.t}</td><td style="font-weight:600">${esc(e.w)}</td><td style="font-size:.72rem;color:var(--muted)">${esc(e.r)}</td>
+    <td>${esc(e.a)}</td>
+    <td>${e.cid ? `<a style="color:var(--primary);font-weight:700;cursor:pointer" onclick="openCase('${e.cid}','audit')">${e.cid}</a>` : '—'}</td></tr>`).join('')
+    : '<tr><td colspan="5"><div class="empty"><i class="fas fa-clock-rotate-left"></i>No audit events match this filter.</div></td></tr>';
+}
+// ---------- AI assistant (scripted, administrative only) ----------
+let aiGreeted = false;
+function aiToggle() {
+  const w = document.getElementById('aiWin');
+  const open = w.classList.toggle('open');
+  document.getElementById('aiFabIc').className = open ? 'fas fa-chevron-down' : 'fas fa-robot';
+  const d = document.getElementById('aiDot');
+  if (d) d.remove();
+  if (open) {
+    if (!aiGreeted) { aiGreeted = true; aiGreet(); }
+    setTimeout(() => document.getElementById('aiInp').focus(), 150);
+  }
+}
+function aiCloseWin() {
+  document.getElementById('aiWin').classList.remove('open');
+  document.getElementById('aiFabIc').className = 'fas fa-robot';
+}
+function aiSuggs() {
+  return '<div style="margin-top:8px">' + [
+    'Which cases are waiting for prescriber documents?',
+    'Show cases with insurer follow-up overdue',
+    'Which authorizations expire within 30 days?',
+    'What is the coverage status for Drug A?',
+    'Open CASE-2026-1042',
+    'Which cases are in appeal?',
+    'Show tasks assigned to the billing coordinator',
+    'Should my patient switch from Drug B to Drug C?'
+  ].map(s => `<span class="ai-sugg" onclick="aiAsk('${s.replace(/'/g, "\\'")}')">${s}</span>`).join('') + '</div>';
+}
+function aiGreet() {
+  aiPush('👋 Hi! I answer <b>administrative</b> questions about this demo — cases, documents, tasks, follow-ups, expiries and coverage checks. I never give clinical, dosing or medication-switching advice.<div style="font-size:.66rem;color:var(--muted);margin-top:5px"><i class="fas fa-flask"></i> Scripted demo — keyword-matched answers over synthetic data, not a real AI.</div>' + aiSuggs(), 'bot');
+}
+function aiNew() {
+  document.getElementById('aiMsgs').innerHTML = '';
+  document.getElementById('aiInp').value = '';
+  aiGreet();
+  document.getElementById('aiInp').focus();
+}
+function aiAsk(q) { document.getElementById('aiInp').value = q; aiSend(); }
+function aiPush(html, who) {
+  const m = document.getElementById('aiMsgs');
+  m.insertAdjacentHTML('beforeend', `<div class="ai-m ${who}"><div class="ai-b">${html}</div></div>`);
+  m.scrollTop = m.scrollHeight;
+}
+function aiSend() {
+  const inp = document.getElementById('aiInp');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  aiPush(esc(q), 'user');
+  const m = document.getElementById('aiMsgs');
+  m.insertAdjacentHTML('beforeend', '<div class="ai-m bot" id="aiTy"><div class="ai-b ai-typing"><span></span><span></span><span></span></div></div>');
+  m.scrollTop = m.scrollHeight;
+  setTimeout(() => { document.getElementById('aiTy')?.remove(); aiPush(aiAnswer(q), 'bot'); }, 700 + Math.random() * 500);
+}
+function aiGoBtn(label, fn, ic) { return `<span class="ai-act" onclick="${fn}"><i class="fas ${ic || 'fa-arrow-right'}"></i> ${label}</span>`; }
+function aiAnswer(raw) {
+  const q = raw.toLowerCase();
+  // --- clinical refusals first ---
+  if (/switch/.test(q) && /drug b/.test(q) && /drug c/.test(q)) {
+    const cb = openCases().find(c => c.drug === 'Drug B'), cc = openCases().find(c => c.drug === 'Drug C');
+    return '<b>That&rsquo;s a clinical decision, and I&rsquo;m not allowed to help with it.</b> Whether a patient should switch from Drug B to Drug C is for the prescribing physician and your pharmacist — it depends on clinical factors this system deliberately never sees.<br><br>What I <b>can</b> do is administrative: once a medication has been chosen by the clinical team, I can show each drug&rsquo;s coverage position, required documents and authorization workload side by side.' +
+      (cb ? aiGoBtn('Coverage — Drug B (' + cb.id + ')', `openCase('${cb.id}','coverage');aiCloseWin()`, 'fa-magnifying-glass-dollar') : '') +
+      (cc ? aiGoBtn('Coverage — Drug C (' + cc.id + ')', `openCase('${cc.id}','coverage');aiCloseWin()`, 'fa-magnifying-glass-dollar') : '');
+  }
+  if (/best|recommend|which (med|drug)|suitab/.test(q) && /med|drug|therap|treat/.test(q))
+    return 'I can&rsquo;t recommend medications or make treatment decisions. I can compare administrative coverage requirements for medications already selected by a pharmacist or prescriber.';
+  if (/switch|change/.test(q) && /med|drug|therap/.test(q))
+    return 'I can&rsquo;t advise on medication changes. Please consult the prescribing physician or pharmacist. I can show the administrative coverage and authorization requirements for an already-selected medication.';
+  if (/dose|dosing|how much|mg\b|titrat/.test(q))
+    return 'I can&rsquo;t provide dosing advice. I can help organize the insurance case or document checklist after the prescription has been reviewed by a qualified professional.';
+  if (/diagnos|symptom|disease|condition.*(what|which)|should .*(continue|stop)/.test(q))
+    return 'I can&rsquo;t interpret symptoms or make clinical judgments. I only handle administrative workflow — cases, documents, tasks, deadlines and coverage information.';
+  // --- deep links & lookups ---
+  const cid = raw.toUpperCase().match(/CASE-2026-\d{4}/);
+  if (cid) {
+    const c = findCase(cid[0]);
+    if (!c) return 'I can&rsquo;t find ' + cid[0] + ' in the demo data.';
+    const r = riskOf(c);
+    return `<b>${c.id}</b> — ${esc(c.drug)}, ${esc(c.insurer.replace(' (synthetic)', ''))}.<br>Status: <b>${STATUS[c.status].l}</b> · Owner: ${c.owner || 'Unassigned'} · Risk: ${r.l}.<br>Next action: ${esc(c.nextAction)}.` + aiGoBtn('Open case', `openCase('${c.id}');aiCloseWin()`, 'fa-folder-open');
+  }
+  if (/cover/.test(q) && /drug [a-f]/i.test(raw)) {
+    const name = 'Drug ' + raw.match(/drug ([a-f])/i)[1].toUpperCase();
+    const rule = RULES[name];
+    if (!rule) return 'That drug is not in the synthetic demo rules library.';
+    const st = CV_STATUS[rule.kind];
+    const kase = openCases().find(c => c.drug === name);
+    return `<b>${name}</b> (Alberta public demo rule v${rule.src.v}, last human review ${rule.src.rev}): <b style="color:${st.c}">${st.l}</b>.<br>${esc(rule.phrase)}<br><span style="font-size:.68rem;color:var(--muted)">Every case shows this directly in its Coverage tab.</span>` +
+      (kase ? aiGoBtn('Open ' + kase.id + ' — Coverage tab', `openCase('${kase.id}','coverage');aiCloseWin()`, 'fa-magnifying-glass-dollar') : '');
+  }
+  if (/prescriber doc|waiting for prescriber|awaiting prescriber/.test(q)) {
+    const cs = openCases().filter(c => c.status === 'prescriber');
+    return `${cs.length} case(s) are waiting on the prescriber:<br>` + cs.map(c => `• <b>${c.id}</b> — ${esc(c.drug)}: ${esc(c.nextAction)}`).join('<br>') + '<br>' + cs.map(c => aiGoBtn(c.id, `openCase('${c.id}');aiCloseWin()`, 'fa-folder-open')).join('');
+  }
+  if (/follow.?up overdue|overdue follow|insurer.*overdue|overdue.*insurer/.test(q)) {
+    const cs = openCases().filter(c => (c.nextFollowUp && du(c.nextFollowUp) < 0) || (c.status === 'submitted' && c.expResp && du(c.expResp) < 0));
+    return `${cs.length} case(s) have overdue insurer follow-up:<br>` + cs.map(c => `• <b>${c.id}</b> — ${esc(c.drug)} (${c.nextFollowUp && du(c.nextFollowUp) < 0 ? 'follow-up was due ' + fd(c.nextFollowUp) : 'response expected ' + fd(c.expResp)})`).join('<br>') + '<br>' + aiGoBtn('Open overdue cases', "WS_FILTER='overdue';go('workspace');aiCloseWin()", 'fa-bell');
+  }
+  if (/expir/.test(q)) {
+    const cs = openCases().filter(c => { const d = du(c.authExpiry); return d !== null && d >= 0 && d <= 30; });
+    return `${cs.length} authorization(s) expire within 30 days:<br>` + cs.map(c => `• <b>${c.id}</b> — ${esc(c.drug)}: ${fdy(c.authExpiry)} (${du(c.authExpiry)}d) · reauth ${c.reauthStatus.toLowerCase()}`).join('<br>') + '<br>' + aiGoBtn('Open expiring cases', "WS_FILTER='expiring';go('workspace');aiCloseWin()", 'fa-calendar-xmark');
+  }
+  if (/missing.*(doc|document)|documents.*missing/.test(q)) {
+    const c = DW.id ? findCase(DW.id) : null;
+    if (c && c.missingDocs.length) return `<b>${c.id}</b> is waiting for: ${c.missingDocs.map(esc).join(', ')}.` + aiGoBtn('Open documents tab', `openCase('${c.id}','docs');aiCloseWin()`, 'fa-file-shield');
+    const cs = openCases().filter(x => x.missingDocs.length);
+    return `${cs.length} case(s) are waiting for documents:<br>` + cs.slice(0, 6).map(x => `• <b>${x.id}</b>: ${x.missingDocs.map(esc).join(', ')}`).join('<br>') + '<br>' + aiGoBtn('Open missing-document cases', "WS_FILTER='docs';go('workspace');aiCloseWin()", 'fa-file-circle-question');
+  }
+  if (/appeal/.test(q)) {
+    const cs = openCases().filter(c => c.status === 'denied');
+    return `${cs.length} case(s) in appeal:<br>` + cs.map(c => `• <b>${c.id}</b> — ${esc(c.drug)}: ${esc(c.denialReason || '')} Appeal deadline ${fdy(c.appealDeadline)} (${du(c.appealDeadline)}d).`).join('<br>') + '<br>' + cs.map(c => aiGoBtn('Open ' + c.id, `openCase('${c.id}');aiCloseWin()`, 'fa-folder-open')).join('');
+  }
+  if (/billing coordinator|dana/.test(q)) {
+    const ts = allTasks().filter(t => t.who === 'Dana Whitfield' && t.status === 'Open');
+    return `Dana Whitfield (Billing Coordinator) has ${ts.length} open task(s):<br>` + ts.map(t => `• <b>${t.id}</b> ${esc(t.title)} — ${t.cid}, due ${fd(t.due)}`).join('<br>') + '<br>' + aiGoBtn('Open case workspace', "WS_FILTER=null;go('workspace');aiCloseWin()", 'fa-table-columns');
+  }
+  if (/task/.test(q)) {
+    const open = allTasks().filter(t => t.status === 'Open');
+    const over = open.filter(t => du(t.due) < 0);
+    return `There are <b>${open.length}</b> open tasks (${over.length} overdue). ${over.length ? 'Overdue: ' + over.map(t => t.id + ' — ' + esc(t.title)).join('; ') + '.' : ''}` + aiGoBtn('Open overdue cases', "WS_FILTER='overdue';go('workspace');aiCloseWin()", 'fa-bell');
+  }
+  if (/case|board|status|open/.test(q)) {
+    const bs = Object.keys(STATUS).filter(k => k !== 'closed').map(k => ({ l: STATUS[k].l, n: openCases().filter(c => c.status === k).length })).filter(x => x.n);
+    return `There are <b>${openCases().length} open cases</b>:<br>` + bs.map(b => `• ${b.l}: ${b.n}`).join('<br>') + '<br>' + aiGoBtn('Open case workspace', "WS_FILTER=null;go('workspace');aiCloseWin()", 'fa-table-columns');
+  }
+  return 'I&rsquo;m a scripted demo assistant for administrative questions. Try one of these:' + aiSuggs();
+}
+
+// ---------- guided tour ----------
+let tourIdx = -1;
+const tourCase = 'CASE-2026-1043';
+let TOUR_SNAP = null;      // pristine snapshot of the tour case (captured at load)
+const tourSnaps = {};      // per-step snapshots: state as it was when the step was entered
+let tourTimers = [];
+function tt(fn, ms) { tourTimers.push(setTimeout(fn, ms)); } // step timers, cancelled on navigation
+function tourClearTimers() { tourTimers.forEach(clearTimeout); tourTimers = []; }
+
+const TOUR = [
+  { t: 'One board for every authorization case', x: 'The Case Workspace is the heart of this feature: every special-authorization case is a card moving left to right, from first intake to closed. No patient names — only de-identified references. Let’s follow one case end to end.',
+    r: () => { closeDrawer(); WS_FILTER = null; go('workspace'); hl('#kb'); } },
+  { t: 'Coverage shown directly on the case', x: 'Open a case and its Coverage tab already shows the demo rule for that drug: possible status, criteria, checklist, rule source, version and last human review — no separate lookup. Wording stays careful: “may require”, subject to the insurer’s final determination.',
+    r: () => openCase(tourCase, 'coverage') },
+  { t: 'The checklist is already tasks', x: 'The same checklist drives the work: missing documents exist as SYSTEM-GENERATED tasks assigned to the team, right next to the documents themselves.',
+    r: () => openCase(tourCase, 'work') },
+  { t: 'Collect the consent', x: 'Simulated uploads are classified and version-controlled. The patient consent just arrived — watch the “waiting for documents” flag start to clear.',
+    r: () => { openCase(tourCase, 'work'); tt(() => dwUpload(tourCase, 'Patient consent'), 500); } },
+  { t: 'Collect the chart notes', x: 'And the prescriber’s chart notes. With both documents on file, the coverage checklist items flip to “On file” automatically.',
+    r: () => { openCase(tourCase, 'work'); tt(() => dwUpload(tourCase, 'Chart notes'), 500); } },
+  { t: 'Move the case to Ready to submit', x: 'With documents collected, the case moves forward on the board. In daily use you just drag the card — every move is audited.',
+    r: () => { closeDrawer(); go('workspace'); tt(() => moveCase(tourCase, 'ready'), 400); } },
+  { t: 'Record submission — via your existing channel', x: 'AlgoPharma does not submit anything itself. The team submits through the existing insurer portal or fax, then records it here: status, expected response date and a communication log entry.',
+    r: () => { openCase(tourCase, 'ov'); tt(() => lifeSubmit(tourCase), 500); } },
+  { t: 'The insurer asks for more information', x: 'A simulated insurer response arrives: additional documentation requested. The case moves to Needs more information and a document task is generated automatically.',
+    r: () => { openCase(tourCase, 'ov'); tt(() => lifeMoreInfo(tourCase), 400); } },
+  { t: 'Provide the document, back to review', x: 'The requested document is uploaded and the case is marked resubmitted — back under insurer review, with the whole exchange preserved in the Activity tab.',
+    r: () => { openCase(tourCase, 'work'); tt(() => dwUpload(tourCase, 'Insurer response'), 400); tt(() => { lifeResubmit(tourCase); dwTab('ov'); }, 1100); } },
+  { t: 'Approval — and the expiry is recorded', x: 'The approval notice arrives through the existing channel. Recording it stores the authorization number and expiry date — and schedules a reauthorization task 60 days before expiry.',
+    r: () => { const c = findCase(tourCase); if (c && c.status !== 'approved') { c.status = 'approved'; c.stageSince = '2026-08-10'; c.approvalDate = '2026-08-10'; c.authNo = 'SYN-AUTH-91544'; c.authStart = '2026-08-10'; c.authExpiry = '2026-11-05'; c.nextAction = 'Monitor authorization expiry'; c.nextFollowUp = '2026-09-06'; c.docs.unshift({ type: 'Approval notice', v: 1, by: me(), d: '2026-08-10', ver: 'Verified', task: null }); c.tasks.push(mkTask(TASK_SEQ++, 'Start reauthorization preparation', c.owner || 'Dana Whitfield', '2026-09-06')); audit(c, 'Approval recorded: SYN-AUTH-91544, authorization expires Nov 5, 2026 — reauthorization task scheduled', 'status'); } openCase(tourCase, 'ov'); renderKb(); refreshBadges(); toast('🎉 ' + tourCase + ' approved — expiry Nov 5, 2026 now monitored'); } },
+  { t: 'Risk lives right on the card', x: 'Back on the board, every card carries a colored risk label — expiring authorization, overdue response, missing documents, appeal deadline. Hover any label for the full details. The dashboard cards filter the board the same way.',
+    r: () => { closeDrawer(); WS_FILTER = null; go('workspace'); tt(() => { const el2 = document.querySelector(`[data-cid="${tourCase}"] .kc-risk`); if (el2) { el2.classList.add('hl'); el2.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' }); } }, 400); } },
+  { t: 'Everything is audited and reported', x: 'Every status change, upload, task and communication you just saw is in the audit trail, and Reports aggregates processing times, missing documents, denial reasons and expiry prevention. That is the whole loop — coverage to reauthorization, in one place. Explore freely!',
+    r: () => { closeDrawer(); go('reports'); tt(() => hl('#repTiles'), 300); } }
+];
+
+function hl(sel) { const e = document.querySelector(sel); if (e) hl2(e); }
+function hl2(e) { e.classList.add('hl'); e.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+function unhl() { document.querySelectorAll('.hl').forEach(e => e.classList.remove('hl')); }
+
+function tourRestoreCase(json) {
+  const c = findCase(tourCase);
+  Object.keys(c).forEach(k => delete c[k]);
+  Object.assign(c, JSON.parse(json));
+}
+function tourGo(i) {
+  tourClearTimers(); unhl();
+  if (i >= TOUR.length) { tourEnd(true); return; }
+  if (i < 0) return;
+  if (tourSnaps[i]) {
+    // revisiting this step (Previous, or Next after a rewind): rewind the demo
+    // state to exactly what it was when the step was first entered, then replay it
+    const s = tourSnaps[i];
+    tourRestoreCase(s.c);
+    if (GLOBAL_AUDIT.length > s.a) GLOBAL_AUDIT.splice(0, GLOBAL_AUDIT.length - s.a);
+    WS_FILTER = s.w;
+    if (DW.open && DW.id === tourCase) dwRenderAll(findCase(tourCase));
+    renderKb(); refreshBadges(); renderAuditPage(); renderDashActivity();
+  } else {
+    tourSnaps[i] = { c: JSON.stringify(findCase(tourCase)), a: GLOBAL_AUDIT.length, w: WS_FILTER };
+  }
+  tourIdx = i;
+  tourShow();
+  try { TOUR[i].r(); } catch (e) { console.warn('tour step', e); }
+}
+function tourStart() {
+  tourClearTimers();
+  Object.keys(tourSnaps).forEach(k => delete tourSnaps[k]);
+  if (TOUR_SNAP) tourRestoreCase(TOUR_SNAP); // reset the tour case so the demo is repeatable
+  ROLE = 'pharmacist'; document.getElementById('roleSel').value = 'pharmacist'; setRoleSilent();
+  closeDrawer(); renderKb(); refreshBadges();
+  document.getElementById('tour').classList.add('show');
+  tourIdx = -1;
+  tourGo(0);
+}
+function setRoleSilent() {
+  const u = me();
+  document.getElementById('userName').textContent = u;
+  const av = document.getElementById('userAvat');
+  av.textContent = TEAM[u].s; av.style.background = TEAM[u].c;
+}
+function tourShow() {
+  const s = TOUR[tourIdx];
+  document.getElementById('tourT').textContent = 'Step ' + (tourIdx + 1) + ' — ' + s.t;
+  document.getElementById('tourX').textContent = s.x;
+  document.getElementById('tourN').textContent = (tourIdx + 1) + ' / ' + TOUR.length;
+  document.getElementById('tourDots').innerHTML = TOUR.map((_, i) => `<span class="${i <= tourIdx ? 'on' : ''}"></span>`).join('');
+  document.getElementById('tourPrev').style.display = tourIdx === 0 ? 'none' : '';
+  document.getElementById('tourNext').innerHTML = tourIdx === TOUR.length - 1 ? 'Finish <i class="fas fa-check"></i>' : 'Next <i class="fas fa-arrow-right"></i>';
+}
+function tourNext() { tourGo(tourIdx + 1); }
+function tourPrev() { tourGo(tourIdx - 1); } // rewinds state, not just the text
+function tourEnd(done) {
+  tourClearTimers(); unhl();
+  document.getElementById('tour').classList.remove('show');
+  toast(done ? '🎉 Guided demo complete — the whole loop, coverage to reauthorization. Explore freely!' : 'Demo ended — explore at your own pace');
+}
+
+// ---------- init ----------
+TOUR_SNAP = JSON.stringify(findCase(tourCase));
+renderDashboard();
+renderKb();
+refreshBadges();
+</script>
+</body>
+</html>

@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AlgoPharma — Partner Showcase</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#111827; --muted:#6B7280; --bg:#FAFAFA; --surface:#FFFFFF; --line:#E5E7EB;
+  --primary:#00695C; --primary-soft:#E0F2F1; --primary-dark:#004D40;
+  --ok:#10B981; --ok-soft:#ECFDF5; --warn:#F59E0B; --warn-soft:#FFFBEB;
+  --danger:#EF4444; --danger-soft:#FEE2E2; --blue:#3B82F6; --blue-soft:#EFF6FF;
+  --gray-soft:#F3F4F6;
+  --shadow:0 4px 6px -1px rgba(0,0,0,.05); --shadow-lg:0 20px 40px -12px rgba(0,0,0,.15);
+  --tr:.25s cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#F6FAF9;color:var(--ink)}
+/* the cover's soft teal atmosphere, carried across every section */
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(1000px 640px at 18% 6%,rgba(0,105,92,.12),transparent 62%),
+    radial-gradient(900px 620px at 86% 34%,rgba(16,185,129,.09),transparent 62%),
+    radial-gradient(1100px 720px at 50% 98%,rgba(0,105,92,.10),transparent 65%),
+    linear-gradient(160deg,#FFFFFF 0%,#EDF6F3 52%,#F7FBFA 100%)}
+
+/* ===== one continuous page — sections size to their content ===== */
+.deck{width:100%}
+.slide{display:flex;flex-direction:column;padding:92px 64px;position:relative}
+/* every section shares the cover's backdrop — no per-section bands */
+.wrap{max-width:1180px;margin:0 auto;width:100%}
+.slide.center{align-items:center;text-align:center}
+
+/* reveal on scroll (only when JS is running, so no-JS still shows everything) */
+.js .rev{opacity:0;transform:translateY(22px);transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1)}
+.js .rev.show{opacity:1;transform:none}
+
+/* scroll hint on the cover */
+.hint{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);color:var(--muted);
+  font-size:.72rem;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;transition:var(--tr)}
+.hint:hover{color:var(--primary)}
+.hint i{animation:bob 1.7s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+/* ===== typography ===== */
+.eyebrow{display:table;margin:0 auto 18px;font-size:.7rem;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--primary-dark);background:var(--primary-soft);border:1px solid #B2DFDB;border-radius:100px;padding:6px 16px}
+h1{font-size:3.2rem;line-height:1.08;letter-spacing:-1.8px;font-weight:800}
+h2{font-size:2.1rem;line-height:1.15;letter-spacing:-1px;font-weight:800;margin-bottom:10px;text-align:center}
+h2 i{color:var(--primary);margin-right:14px}
+.sub{font-size:1.02rem;color:var(--muted);line-height:1.6;max-width:820px;margin:0 auto 34px;text-align:center}
+.slide.center .sub{margin-left:auto;margin-right:auto}
+p{line-height:1.65}
+b,strong{font-weight:700}
+
+/* ===== chrome ===== */
+.bar{position:fixed;top:0;left:0;height:3px;background:var(--primary);z-index:60;transition:width .3s}
+.brand{position:fixed;top:22px;left:28px;display:flex;align-items:center;gap:10px;z-index:50;font-size:.82rem;font-weight:700}
+.brand i{color:var(--primary);font-size:1.15rem}
+.brand span{color:var(--muted);font-weight:600;font-size:.7rem;display:block;margin-top:-2px}
+/* vertical dot rail */
+.dots{position:fixed;top:50%;right:26px;transform:translateY(-50%);display:flex;flex-direction:column;
+  gap:9px;z-index:50;align-items:flex-end}
+.dots span{width:8px;height:8px;border-radius:50%;background:#D1D5DB;cursor:pointer;transition:var(--tr);position:relative}
+.dots span:hover{background:var(--primary);transform:scale(1.3)}
+.dots span.on{background:var(--primary);height:22px;border-radius:5px}
+.dots span::after{content:attr(data-label);position:absolute;right:18px;top:50%;transform:translateY(-50%);
+  background:#1F2937;color:#fff;font-size:.68rem;font-weight:600;padding:5px 10px;border-radius:6px;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:var(--tr)}
+.dots span:hover::after{opacity:1}
+.lang{position:fixed;top:20px;right:26px;z-index:60;display:flex;background:#fff;border:1px solid var(--line);
+  border-radius:100px;padding:3px;box-shadow:var(--shadow);gap:2px}
+.lang button{border:none;background:transparent;font-family:inherit;font-size:.74rem;font-weight:700;
+  color:var(--muted);padding:6px 14px;border-radius:100px;cursor:pointer;transition:var(--tr);white-space:nowrap}
+.lang button:hover{color:var(--primary)}
+#lang{display:none}   /* language is URL-driven: /chinese */
+.lang button.on{background:var(--primary);color:#fff}
+html[lang="zh"] body{font-family:'Plus Jakarta Sans','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif}
+/* Chinese needs a touch more line-height and no negative letter-spacing */
+html[lang="zh"] h1,html[lang="zh"] h2{letter-spacing:0;line-height:1.25}
+html[lang="zh"] .eyebrow{letter-spacing:1px}
+.totop{position:fixed;bottom:24px;right:26px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
+  background:#fff;color:var(--ink);cursor:pointer;font-size:.85rem;box-shadow:var(--shadow);z-index:50;
+  display:flex;align-items:center;justify-content:center;transition:var(--tr);opacity:0;pointer-events:none}
+.totop.on{opacity:1;pointer-events:auto}
+.totop:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.synth{position:fixed;bottom:24px;left:28px;font-size:.66rem;color:var(--muted);z-index:50;font-weight:600;
+  background:rgba(250,250,250,.9);padding:4px 8px;border-radius:6px}
+
+
+/* ===== product-UI carousel (cover) ===== */
+.hc{position:relative;max-width:1080px;margin:30px auto 0;border-radius:24px;padding:12px;
+  background:linear-gradient(150deg,#0B3B36 0%,#12433D 45%,#0A302C 100%);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 30px 70px -20px rgba(0,105,92,.45),0 0 0 1px rgba(0,105,92,.08),0 10px 30px rgba(15,23,42,.14);
+  transition:box-shadow .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1);
+  opacity:0;transform:translateY(26px) scale(.965);text-align:left}
+.hc.in{opacity:1;transform:none}
+.hc:hover{box-shadow:0 36px 90px -18px rgba(0,105,92,.62),0 0 0 1px rgba(0,105,92,.22),0 0 46px rgba(16,185,129,.28);transform:translateY(-3px)}
+.hc-bar{display:flex;align-items:center;gap:9px;padding:2px 6px 11px}
+.hc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hc-tabs{display:flex;gap:5px;margin-left:10px;flex-wrap:wrap}
+.hc-tab{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.5);padding:4px 12px;border-radius:100px;
+  cursor:pointer;transition:var(--tr);white-space:nowrap;border:1px solid transparent}
+.hc-tab:hover{color:#fff;background:rgba(255,255,255,.08)}
+.hc-tab.on{color:#fff;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.18)}
+.hc-live{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.6rem;font-weight:700;
+  color:rgba(255,255,255,.55);letter-spacing:.5px;padding-right:4px}
+.hc-live i{color:#34D399;font-size:.48rem;animation:hcPulse 2.2s ease-in-out infinite}
+@keyframes hcPulse{0%,100%{opacity:1}50%{opacity:.25}}
+.hc-screen{position:relative;background:#F7FAF9;border-radius:15px;overflow:hidden;height:392px;
+  border:1px solid rgba(255,255,255,.10)}
+.hc-slide{position:absolute;inset:0;opacity:0;transform:translateX(18px) scale(.995);pointer-events:none;
+  /* leaving slide clears quickly so the two mockups never muddle together */
+  transition:opacity .3s ease-in,transform .5s cubic-bezier(.4,0,.2,1);padding:16px 18px;overflow:hidden}
+.hc-slide.on{opacity:1;transform:none;pointer-events:auto;
+  transition:opacity .5s ease-out .2s,transform .6s cubic-bezier(.16,1,.3,1) .12s}
+.hc-slide.on .hc-body{animation:hcFloat 7s ease-in-out infinite}
+@keyframes hcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hc-head{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.hc-head i{color:var(--primary)}
+.hc-head b{font-size:.86rem}
+.hc-head span{font-size:.67rem;color:var(--muted)}
+.hc-dots{display:flex;justify-content:center;gap:8px;padding:12px 0 2px}
+.hc-dots button{width:8px;height:8px;border-radius:50%;border:none;cursor:pointer;padding:0;
+  background:rgba(255,255,255,.28);transition:var(--tr)}
+.hc-dots button:hover{background:rgba(255,255,255,.55)}
+.hc-dots button.on{background:#5EEAD4;width:26px;border-radius:5px}
+/* mockup primitives */
+.mk{background:#fff;border:1px solid var(--line);border-radius:10px}
+.mk-row{display:flex;align-items:center;gap:8px;font-size:.7rem}
+.mk-chip{display:inline-flex;align-items:center;gap:4px;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.mk-chip.c-green{background:var(--ok-soft);color:#065F46}
+.mk-chip.c-yellow{background:var(--warn-soft);color:#92400E}
+.mk-chip.c-orange{background:#FFF7ED;color:#9A3412}
+.mk-chip.c-red{background:var(--danger-soft);color:#991B1B}
+.mk-chip.c-indigo{background:var(--primary-soft);color:var(--primary-dark)}
+.mk-col{background:var(--gray-soft);border:1px solid var(--line);border-radius:9px;padding:7px;min-width:0}
+.mk-colhead{display:flex;align-items:center;gap:6px;font-size:.56rem;font-weight:800;margin-bottom:6px;color:#374151}
+.mk-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.mk-card:last-child{margin-bottom:0}
+.mk-id{font-size:.53rem;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.mk-drug{font-size:.7rem;font-weight:700;margin:1px 0}
+.mk-sub{font-size:.56rem;color:var(--muted)}
+.mk-avat{width:17px;height:17px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;
+  justify-content:center;font-size:.47rem;font-weight:800;flex-shrink:0}
+.mk-bar{height:5px;border-radius:3px;background:var(--gray-soft);overflow:hidden}
+.mk-bar div{height:100%;border-radius:3px}
+.risk-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+@media (max-width:900px){
+  .hc{padding:8px;border-radius:18px;margin-top:22px}
+  .hc-tabs{display:none}
+  .hc-screen{overflow-x:auto;overflow-y:hidden}
+  .hc-body{min-width:640px}
+}
+
+/* ===== components ===== */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 15px;border-radius:100px;font-size:.74rem;font-weight:700}
+.p-teal{background:var(--primary-soft);color:var(--primary-dark)}
+.p-green{background:var(--ok-soft);color:#065F46}
+.p-amber{background:var(--warn-soft);color:#92400E}
+.p-red{background:var(--danger-soft);color:#991B1B}
+.p-blue{background:var(--blue-soft);color:#1E40AF}
+.p-gray{background:var(--gray-soft);color:#374151}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+.feat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;transition:var(--tr)}
+.feat:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.feat i{color:var(--primary);font-size:1.15rem;margin-bottom:10px;display:block}
+.feat h3{font-size:.95rem;font-weight:700;margin-bottom:5px}
+.feat p{font-size:.78rem;color:var(--muted);line-height:1.55}
+/* small live-UI examples from the demo, pinned to the bottom of each feature card */
+.feat{display:flex;flex-direction:column}
+.feat p{margin-bottom:12px}
+.feat-mini{margin-top:auto;background:#F4F8F7;border:1px solid var(--line);border-radius:10px;padding:9px 10px;
+  /* uniform size across all 12 cards; content centered; 128px fits the tallest
+     example in either language down to the 3-column breakpoint */
+  height:128px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.feat-mini .mk-card{background:#fff;margin:0}
+
+.tscroll{overflow-x:auto;border-radius:14px;box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}
+sup{line-height:0}sup a{color:var(--primary);text-decoration:none;font-weight:800}
+table{width:100%;border-collapse:collapse;font-size:.88rem;background:#fff}
+th{text-align:left;padding:13px 16px;background:var(--primary);color:#fff;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.7px;font-weight:800}
+td{padding:12px 16px;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.total td{background:var(--primary-soft);font-weight:800;font-size:.95rem;border-top:2px solid var(--primary)}
+tbody tr:hover:not(.total) td{background:#FAFAFA}
+.num{font-variant-numeric:tabular-nums;font-weight:700}
+.was{color:var(--danger);font-weight:800}
+.now{color:var(--ok);font-weight:800}
+.auto{color:var(--muted);font-size:.8rem;font-style:italic}
+
+.big{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;margin:26px 0}
+.bigstat{text-align:center;min-width:150px}
+.bignum{font-size:3.2rem;font-weight:800;letter-spacing:-2px;line-height:1;color:var(--primary)}
+.biglbl{font-size:.76rem;color:var(--muted);font-weight:600;margin-top:6px}
+
+.flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;margin:22px 0}
+.fbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 8px;font-size:.71rem;
+  font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.fbox i{color:var(--primary)}
+.wf-snake .fbox{gap:5px}
+.farr{color:#9CA3AF;padding:0 2px;font-size:.72rem}
+/* serpentine chain: one unbroken flow — 1→5, elbow down, 6→9 running right-to-left.
+   Step numbers come from a CSS counter (DOM order), so they survive language switches. */
+.wf-scroll{overflow-x:auto;margin:20px 0 2px;padding:4px 2px}
+.wf-snake{width:max-content;margin:0 auto;counter-reset:wf}
+.wf-snake .flow{flex-wrap:nowrap;margin:0}
+.wf-snake .flow.r1{justify-content:flex-start}
+.wf-snake .flow.r2{flex-direction:row-reverse;justify-content:flex-start;margin-top:12px}
+.wf-snake .fbox{counter-increment:wf}
+.wf-snake .fbox::before{content:counter(wf);width:17px;height:17px;border-radius:50%;
+  background:var(--primary);color:#fff;font-size:.58rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.farr.turn{padding:0 6px 0 10px;color:var(--primary)}
+
+.chk{display:flex;gap:11px;align-items:flex-start;padding:8px 0;font-size:.88rem;line-height:1.5}
+/* both data-card footnotes share one reserved height, so their separator
+   lines sit at the same level regardless of bullet count or text length */
+.data-foot{margin-top:auto;padding-top:12px;line-height:1.55}
+.chk i{color:var(--ok);margin-top:4px;flex-shrink:0}
+.chk-sub{font-size:.73rem;color:var(--muted);font-weight:400;margin-top:3px;line-height:1.55}
+.no i{color:var(--danger)}
+
+.note{background:var(--gray-soft);border-left:3px solid var(--muted);border-radius:0 10px 10px 0;
+  padding:12px 16px;font-size:.76rem;color:var(--muted);line-height:1.6;margin-top:18px}
+.note b{color:var(--ink)}
+
+.cta{display:inline-flex;align-items:center;gap:9px;background:var(--primary);color:#fff;border:none;
+  padding:14px 28px;border-radius:100px;font-family:inherit;font-size:.92rem;font-weight:700;
+  cursor:pointer;text-decoration:none;transition:var(--tr);box-shadow:var(--shadow)}
+.cta:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.cta.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.cta.ghost:hover{border-color:var(--primary);color:var(--primary);background:#fff}
+
+@media (max-width:900px){
+  .slide{padding:60px 22px}
+  .dots{display:none}
+  .lang{top:auto;bottom:22px;right:76px}
+  .synth{font-size:.6rem}
+  h1{font-size:2.1rem}h2{font-size:1.5rem}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  table{font-size:.76rem;min-width:640px}th,td{padding:9px 10px}
+  .tscroll{border:1px solid var(--line)}
+  .bignum{font-size:2.2rem}
+}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<div class="lang" id="lang">
+  <button data-lang="en" class="on" onclick="setLang('en')">EN</button>
+  <button data-lang="zh" onclick="setLang('zh')">中文</button>
+</div>
+<div class="brand"><i class="fas fa-staff-snake"></i><div>AlgoPharma<span data-i18n="k0">New feature · Insurance &amp; SA Workflow</span></div></div>
+<div class="synth" data-i18n="k1">Illustrative model · synthetic demo data</div>
+<div class="deck" id="deck">
+<!-- 1 ── COVER ───────────────────────────────────────── -->
+<section class="slide center on">
+<div class="wrap">
+<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:22px">
+<div class="pill p-green" data-i18n="k440" style="border:1px solid #A7F3D0"><i class="fas fa-wand-magic-sparkles"></i> NEW — a feature of existing AlgoPharma platform, not a separate system</div>
+<div class="pill p-teal" data-i18n="k2"><i class="fas fa-plug"></i> Works alongside your existing pharmacy and insurer tools</div>
+</div>
+<h1 data-i18n="k225">The insurance work<br/>your pharmacy already does —<br/><span style="color:var(--primary)">organized.</span></h1>
+<p class="sub" data-i18n="k4" style="font-size:1.12rem;margin-top:22px">
+        The new <b>Insurance &amp; SA Workflow</b> feature brings coverage information, special-authorization preparation,
+        documents, tasks, insurer follow-up and authorization expiry tracking into <b>one workflow</b> —
+        inside the AlgoPharma platform you already run, not another system to adopt.
+      </p>
+<div style="display:flex;gap:12px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+<a class="cta" data-i18n="k10" href="demo2.html"><i class="fas fa-circle-play"></i> Open the live demo</a>
+<button class="cta ghost" data-i18n="k11" onclick="go(1)"><i class="fas fa-arrow-down"></i> Scroll through the deck</button>
+</div>
+<div class="hc" id="hc" onmouseenter="hcPause()" onmouseleave="hcResume()">
+<div class="hc-bar">
+<span class="hc-dot" style="background:#FF5F57"></span>
+<span class="hc-dot" style="background:#FEBC2E"></span>
+<span class="hc-dot" style="background:#28C840"></span>
+<div class="hc-tabs" id="hcTabs">
+<div class="hc-tab on" data-i18n="k300" onclick="hcGo(0,true)">Coverage &amp; Access</div>
+<div class="hc-tab" data-i18n="k301" onclick="hcGo(1,true)">Case Workspace</div>
+<div class="hc-tab" data-i18n="k302" onclick="hcGo(2,true)">Authorization Lifecycle</div>
+</div>
+<div class="hc-live" data-i18n="k303"><i class="fas fa-circle"></i> SYNTHETIC DEMO</div>
+</div>
+<div class="hc-screen">
+
+<div class="hc-slide on" data-hc="0"><div class="hc-body">
+<div class="hc-head"><i class="fas fa-magnifying-glass-dollar"></i><b data-i18n="k300">Coverage &amp; Access</b><span data-i18n="k304">— CASE-2026-1043 · Drug C · Alberta public plan (synthetic)</span></div>
+<div style="border-radius:12px;padding:12px 14px;background:#FFF7ED;border:1px solid #FED7AA;margin-bottom:11px">
+<div style="display:flex;gap:11px;align-items:flex-start">
+<div style="width:32px;height:32px;border-radius:9px;background:#fff;color:#EA580C;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-file-signature"></i></div>
+<div style="flex:1;min-width:0">
+<div data-i18n="k305" style="font-size:.53rem;font-weight:800;color:#EA580C;letter-spacing:.5px">DRUG C · PUBLIC PLAN (ALBERTA) · SYNTHETIC</div>
+<div data-i18n="k306" style="font-size:.88rem;font-weight:800;color:#EA580C;margin:1px 0 3px">Special authorization may be required</div>
+<div data-i18n="k307" style="font-size:.66rem;color:#7C2D12;line-height:1.45">Based on the available demo rule, this medication may require special authorization with specialist involvement.</div>
+</div></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="mk" style="padding:10px">
+<div style="font-size:.68rem;font-weight:700;margin-bottom:6px"><i class="fas fa-file-circle-check" style="color:var(--primary)"></i> <span data-i18n="k308">Document checklist</span></div>
+<div class="mk-row" style="padding:4px 0;border-bottom:1px solid var(--line)"><i class="fas fa-circle-check" style="color:var(--ok)"></i><span data-i18n="k309" style="flex:1;text-decoration:line-through;opacity:.6">Special-authorization form</span><span class="mk-chip c-green" data-i18n="k313">On file</span></div>
+<div class="mk-row" style="padding:4px 0;border-bottom:1px solid var(--line)"><i class="fas fa-circle-check" style="color:var(--ok)"></i><span data-i18n="k310" style="flex:1;text-decoration:line-through;opacity:.6">Specialist consultation letter</span><span class="mk-chip c-green" data-i18n="k313">On file</span></div>
+<div class="mk-row" style="padding:4px 0;border-bottom:1px solid var(--line)"><i class="far fa-circle" style="color:#CBD5E1"></i><span data-i18n="k311" style="flex:1">Baseline lab report</span><span class="mk-chip c-yellow" data-i18n="k314">To collect</span></div>
+<div class="mk-row" style="padding:4px 0"><i class="far fa-circle" style="color:#CBD5E1"></i><span data-i18n="k312" style="flex:1">Patient consent</span><span class="mk-chip c-yellow" data-i18n="k314">To collect</span></div>
+<div style="margin-top:8px"><div class="mk-bar"><div style="width:50%;background:var(--ok)"></div></div>
+<div data-i18n="k315" style="font-size:.56rem;color:var(--muted);margin-top:4px">2 of 4 documents on file — updates automatically as they arrive</div></div>
+</div>
+<div class="mk" style="padding:10px">
+<div style="font-size:.68rem;font-weight:700;margin-bottom:6px"><i class="fas fa-book-bookmark" style="color:var(--primary)"></i> <span data-i18n="k316">Rule source &amp; verification</span></div>
+<div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span data-i18n="k317" style="color:var(--muted)">Source</span><b data-i18n="k318" style="text-align:right;font-size:.62rem">Alberta Synthetic Specialty Criteria</b></div>
+<div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span data-i18n="k319" style="color:var(--muted)">Rule version</span><b>2026-05</b></div>
+<div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span data-i18n="k320" style="color:var(--muted)">Effective date</span><b>May 1, 2026</b></div>
+<div class="mk-row" style="justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)"><span data-i18n="k321" style="color:var(--muted)">Last human review</span><b>Jul 22, 2026</b></div>
+<div class="mk-row" style="justify-content:space-between;padding:4px 0"><span data-i18n="k322" style="color:var(--muted)">Reviewer</span><b data-i18n="k323" style="font-size:.62rem">Compliance team</b></div>
+<div style="margin-top:7px"><span class="mk-chip c-green" data-i18n="k324"><i class="fas fa-user-check"></i> Verified demo rule</span></div>
+</div></div>
+<div data-i18n="k325" style="margin-top:9px;font-size:.58rem;color:var(--muted);background:var(--gray-soft);border-radius:8px;padding:7px 10px;line-height:1.5"><i class="fas fa-scale-balanced"></i> Subject to patient eligibility, plan terms and the insurer's final determination — administrative information only, not clinical advice.</div>
+</div></div>
+
+<div class="hc-slide" data-hc="1"><div class="hc-body">
+<div class="hc-head"><i class="fas fa-table-columns"></i><b data-i18n="k326">Special Authorization Case Workspace</b><span data-i18n="k327">— 24 open cases · drag between stages · de-identified references only</span></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+<div class="mk-col">
+<div class="mk-colhead"><span class="risk-dot" style="background:#F59E0B"></span><span data-i18n="k328">GATHERING INFO</span><span style="margin-left:auto;color:var(--muted)">6</span></div>
+<div class="mk-card"><div class="mk-id">CASE-2026-1043</div><div class="mk-drug">Drug C</div><div class="mk-sub">PT-4780 · Alberta Public</div><div style="margin:5px 0"><span class="mk-chip c-yellow" data-i18n="k332"><i class="fas fa-triangle-exclamation"></i> Documents missing</span></div><div class="mk-row" style="justify-content:space-between"><span data-i18n="k337" style="font-size:.53rem;color:var(--muted)">5d in stage</span><span class="mk-avat" style="background:#0D9488">ML</span></div></div>
+<div class="mk-card"><div class="mk-id">CASE-2026-1051</div><div class="mk-drug">Drug E</div><div class="mk-sub">PT-4477 · Northstar Life</div><div style="margin:5px 0"><span class="mk-chip c-orange" data-i18n="k333"><i class="fas fa-calendar-xmark"></i> Auth expires ≤30d</span></div><div class="mk-row" style="justify-content:space-between"><span data-i18n="k338" style="font-size:.53rem;color:var(--muted)">7d in stage</span><span class="mk-avat" style="background:#4F46E5">PS</span></div></div>
+</div>
+<div class="mk-col">
+<div class="mk-colhead"><span class="risk-dot" style="background:#8B5CF6"></span><span data-i18n="k329">AWAITING PRESCRIBER</span><span style="margin-left:auto;color:var(--muted)">3</span></div>
+<div class="mk-card"><div class="mk-id">CASE-2026-1049</div><div class="mk-drug">Drug C</div><div class="mk-sub">PT-4501 · Alberta Public</div><div style="margin:5px 0"><span class="mk-chip c-green" data-i18n="k334"><i class="fas fa-circle-check"></i> Normal</span></div><div class="mk-row" style="justify-content:space-between"><span data-i18n="k339" style="font-size:.53rem;color:var(--muted)">9d in stage</span><span class="mk-avat" style="background:#4F46E5">PS</span></div></div>
+<div class="mk-card"><div class="mk-id">CASE-2026-1056</div><div class="mk-drug">Drug A</div><div class="mk-sub">PT-4390 · Maple Benefits</div><div style="margin:5px 0"><span class="mk-chip c-green" data-i18n="k334"><i class="fas fa-circle-check"></i> Normal</span></div><div class="mk-row" style="justify-content:space-between"><span data-i18n="k338" style="font-size:.53rem;color:var(--muted)">7d in stage</span><span class="mk-avat" style="background:#0D9488">ML</span></div></div>
+</div>
+<div class="mk-col" style="background:var(--primary-soft);border-color:#B2DFDB">
+<div class="mk-colhead"><span class="risk-dot" style="background:#3B82F6"></span><span data-i18n="k330">READY TO SUBMIT</span><span style="margin-left:auto;color:var(--muted)">2</span></div>
+<div class="mk-card" style="border-color:var(--primary);box-shadow:0 4px 12px rgba(0,105,92,.16)"><div class="mk-id">CASE-2026-1050</div><div class="mk-drug">Drug B</div><div class="mk-sub">PT-4498 · Prairie Blue Cross</div><div style="margin:5px 0"><span class="mk-chip c-green" data-i18n="k334"><i class="fas fa-circle-check"></i> Normal</span></div><div data-i18n="k336" style="font-size:.53rem;background:var(--gray-soft);border-radius:5px;padding:3px 5px;margin-bottom:5px"><i class="fas fa-forward-step" style="color:var(--primary)"></i> Submit via existing channel</div><div class="mk-row" style="justify-content:space-between"><span data-i18n="k340" style="font-size:.53rem;color:var(--muted)">3d in stage</span><span class="mk-avat" style="background:#2563EB">DW</span></div></div>
+</div>
+<div class="mk-col">
+<div class="mk-colhead"><span class="risk-dot" style="background:#06B6D4"></span><span data-i18n="k331">INSURER REVIEW</span><span style="margin-left:auto;color:var(--muted)">6</span></div>
+<div class="mk-card"><div class="mk-id">CASE-2026-1042</div><div class="mk-drug">Drug A</div><div class="mk-sub">PT-4821 · Maple Benefits</div><div style="margin:5px 0"><span class="mk-chip c-red" data-i18n="k335"><i class="fas fa-bell"></i> Response overdue</span></div><div class="mk-row" style="justify-content:space-between"><span data-i18n="k338" style="font-size:.53rem;color:var(--muted)">7d in stage</span><span class="mk-avat" style="background:#4F46E5">PS</span></div></div>
+<div class="mk-card"><div class="mk-id">CASE-2026-1047</div><div class="mk-drug">Drug A</div><div class="mk-sub">PT-4590 · Maple Benefits</div><div style="margin:5px 0"><span class="mk-chip c-red" data-i18n="k335"><i class="fas fa-bell"></i> Response overdue</span></div><div class="mk-row" style="justify-content:space-between"><span data-i18n="k341" style="font-size:.53rem;color:var(--muted)">19d in stage</span><span class="mk-avat" style="background:#2563EB">DW</span></div></div>
+</div></div>
+<div data-i18n="k342" style="margin-top:9px;font-size:.58rem;color:var(--muted);background:var(--gray-soft);border-radius:8px;padding:7px 10px"><i class="fas fa-hand-pointer" style="color:var(--primary)"></i> Every card carries its biggest active risk — hover the label for full details. Patient names are never displayed.</div>
+</div></div>
+
+<div class="hc-slide" data-hc="2"><div class="hc-body">
+<div class="hc-head"><i class="fas fa-rotate"></i><b data-i18n="k302">Authorization Lifecycle</b><span data-i18n="k343">— CASE-2026-1044 · Drug B · SYN-AUTH-88213</span></div>
+<div data-i18n="k344" style="background:var(--warn-soft);border:1px solid #FDE68A;border-radius:9px;padding:8px 12px;margin-bottom:11px;font-size:.62rem;color:#78350F"><i class="fas fa-shield-halved"></i> <b>Administrative authorization risk — pharmacist or prescriber review required.</b> Nothing is renewed automatically; no prescriber is contacted automatically.</div>
+<div class="mk" style="padding:11px 13px;margin-bottom:10px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+<span class="mk-chip c-orange" data-i18n="k345" style="font-size:.6rem;padding:3px 9px">Expiring within 30 days</span>
+<span data-i18n="k346" style="font-size:.64rem;color:var(--muted)">Authorization expires <b style="color:var(--ink)">Sep 2, 2026</b> · 23 days remaining</span>
+<span style="margin-left:auto;font-size:1.1rem;font-weight:800;color:#EA580C">23d</span>
+</div>
+<div style="display:flex;align-items:center">
+<div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div data-i18n="k347" style="font-size:.52rem;color:var(--muted)">Approved</div></div>
+<div style="height:2px;flex:1;background:var(--ok);margin-bottom:14px"></div>
+<div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div data-i18n="k348" style="font-size:.52rem;color:var(--muted)">Expiry recorded</div></div>
+<div style="height:2px;flex:1;background:var(--ok);margin-bottom:14px"></div>
+<div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div data-i18n="k349" style="font-size:.52rem;color:var(--muted)">90-day reminder</div></div>
+<div style="height:2px;flex:1;background:var(--ok);margin-bottom:14px"></div>
+<div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:var(--ok);margin:0 auto 5px"></div><div data-i18n="k350" style="font-size:.52rem;color:var(--muted)">60-day task</div></div>
+<div style="height:2px;flex:1;background:#EA580C;margin-bottom:14px"></div>
+<div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:#EA580C;margin:0 auto 5px;box-shadow:0 0 0 4px #FFF7ED"></div><div data-i18n="k351" style="font-size:.52rem;color:var(--ink);font-weight:700">30-day escalation</div></div>
+<div style="height:2px;flex:1;background:var(--line);margin-bottom:14px"></div>
+<div style="flex:1;text-align:center"><div style="width:11px;height:11px;border-radius:50%;background:#E5E7EB;margin:0 auto 5px"></div><div data-i18n="k352" style="font-size:.52rem;color:var(--muted)">Reauth submitted</div></div>
+</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="mk" style="padding:10px">
+<div style="font-size:.68rem;font-weight:700;margin-bottom:6px"><i class="fas fa-list-check" style="color:var(--primary)"></i> <span data-i18n="k353">Scheduled reauthorization work</span></div>
+<div class="mk-row" style="padding:5px 0;border-bottom:1px solid var(--line)"><input type="checkbox" style="width:12px;height:12px;accent-color:var(--primary)"><span data-i18n="k354" style="flex:1">Start reauthorization preparation</span><span class="mk-chip c-indigo" data-i18n="k357">AUTO</span></div>
+<div class="mk-row" style="padding:5px 0;border-bottom:1px solid var(--line)"><input type="checkbox" style="width:12px;height:12px;accent-color:var(--primary)"><span data-i18n="k355" style="flex:1">Request updated prescriber letter</span><span class="mk-avat" style="background:#0D9488">ML</span></div>
+<div class="mk-row" style="padding:5px 0"><input type="checkbox" style="width:12px;height:12px;accent-color:var(--primary)"><span data-i18n="k356" style="flex:1">Submit reauth package</span><span class="mk-avat" style="background:#2563EB">DW</span></div>
+</div>
+<div class="mk" style="padding:10px">
+<div style="font-size:.68rem;font-weight:700;margin-bottom:6px"><i class="fas fa-triangle-exclamation" style="color:#EA580C"></i> <span data-i18n="k358">Other authorizations at risk</span></div>
+<div class="mk-row" style="justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span><b>CASE-2026-1048</b> · Drug C</span><span class="mk-chip c-red">12d</span></div>
+<div class="mk-row" style="justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span><b>CASE-2026-1051</b> · Drug E</span><span class="mk-chip c-orange">20d</span></div>
+<div class="mk-row" style="justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)"><span><b>CASE-2026-1063</b> · Drug A</span><span class="mk-chip c-orange">26d</span></div>
+<div class="mk-row" style="justify-content:space-between;padding:5px 0"><span><b>CASE-2026-1062</b> · Drug E</span><span class="mk-chip c-yellow">28d</span></div>
+</div></div>
+</div></div>
+
+</div>
+<div class="hc-dots" id="hcDots">
+<button class="on" onclick="hcGo(0,true)" aria-label="Coverage and Access"></button>
+<button onclick="hcGo(1,true)" aria-label="Case Workspace"></button>
+<button onclick="hcGo(2,true)" aria-label="Authorization Lifecycle"></button>
+</div>
+</div>
+<div class="big">
+<div class="bigstat"><div class="bignum">40<span data-i18n="k5" style="font-size:1.3rem">min</span></div><div class="biglbl" data-i18n="k6">Administrative time<br/>per case today</div></div>
+<div class="bigstat"><div class="bignum" style="color:var(--ok)">2–3<span data-i18n="k5" style="font-size:1.3rem">min</span></div><div class="biglbl" data-i18n="k7">Staff time per case<br/>with AlgoPharma</div></div>
+<div class="bigstat"><div class="bignum" data-i18n="k8" style="color:var(--warn)">$18.5k</div><div class="biglbl" data-i18n="k9">Annual staff cost recovered<br/>at 100 cases / month</div></div>
+</div>
+
+<p data-i18n="k12" style="font-size:.72rem;color:var(--muted);margin-top:26px">
+        An administrative workflow feature. Not a clinical decision-support, prescribing or insurance-adjudication tool.
+      </p>
+</div>
+</section>
+<!-- 2 ── PROBLEM ─────────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k14">The problem today</div>
+<h2 data-i18n="k15"><i class="fas fa-puzzle-piece"></i>Prior-auth work lives in fragments</h2>
+<p class="sub" data-i18n="k16">Faxes on the counter. Notes in someone's head. A spreadsheet. An insurer portal. A phone queue. A folder of PDFs.</p>
+<div class="grid2">
+<div class="card" style="border-color:#FECACA;background:#FFFBFB;display:flex;flex-direction:column;justify-content:space-evenly">
+<div class="pill p-red" data-i18n="k17" style="margin-bottom:14px;align-self:flex-start"><i class="fas fa-triangle-exclamation"></i> Nobody can answer these quickly</div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><div><b data-i18n="k18">Where is this case right now?</b><div class="chk-sub" data-i18n="k420">The status lives with whoever touched it last. Patients often discover it only by calling the pharmacy, then the clinic, then the insurer — and each call starts the reconstruction again.</div></div></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><div><b data-i18n="k19">What is still missing from it?</b><div class="chk-sub" data-i18n="k421">Requirements differ by insurer and by plan, so gaps usually surface as a rejection or an “additional information” letter weeks later — and the clock restarts.</div></div></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><div><b data-i18n="k20">Who owns the next step?</b><div class="chk-sub" data-i18n="k422">The work lands wherever the fax landed. When a case belongs to “the team”, handovers between shifts quietly drop the next step — until the patient calls.</div></div></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><div><b data-i18n="k21">When do we chase the insurer?</b><div class="chk-sub" data-i18n="k423">Insurers rarely announce delays — public special-authority queues have stretched to weeks<sup><a href="#sources">10</a></sup>. Without a recorded expected-response date, chasing happens only when someone remembers.</div></div></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><div><b data-i18n="k22">When does the authorization expire?</b><div class="chk-sub" data-i18n="k424">Nobody sends a warning that the clock has run out. The expiry sits in a filed approval letter, and renewals that need weeks of lead time start at the counter, after a claim rejects.</div></div></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><div><b data-i18n="k23">What exactly did we send, and when?</b><div class="chk-sub" data-i18n="k425">A fax confirmation page is often the only evidence. When the insurer says “never received”, it is memory against their log — so the package is sent again, and the wait restarts.</div></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;justify-content:space-between">
+<div class="card">
+<h3 data-i18n="k24" style="font-size:1rem;margin-bottom:8px"><i class="fas fa-clock" style="color:var(--danger);margin-right:8px"></i>The hidden tax: re-discovery</h3>
+<p data-i18n="k25" style="font-size:.86rem;color:var(--muted)">The single biggest cost is not any one step — it is repeatedly re-establishing what a case is,
+            what it needs, and who last touched it. It happens several times per case and never appears on a report.</p>
+</div>
+<div class="card">
+<h3 data-i18n="k26" style="font-size:1rem;margin-bottom:8px"><i class="fas fa-user-lock" style="color:var(--warn);margin-right:8px"></i>Key-person risk</h3>
+<p data-i18n="k27" style="font-size:.86rem;color:var(--muted)">Prior-auth knowledge usually sits with one or two experienced staff. When they are off,
+            complex cases stall — and when they leave, the knowledge leaves too.</p>
+</div>
+<div class="card">
+<h3 data-i18n="k28" style="font-size:1rem;margin-bottom:8px"><i class="fas fa-calendar-xmark" style="color:var(--danger);margin-right:8px"></i>Lapses discovered at the counter</h3>
+<p data-i18n="k29" style="font-size:.86rem;color:var(--muted)">Authorizations expire quietly. The pharmacy usually finds out when a claim rejects
+            with the patient standing there — turning planned work into an emergency.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3 ── SOLUTION / CHAIN ────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k30">The feature</div>
+<h2 data-i18n="k31"><i class="fas fa-diagram-project"></i>One connected workflow</h2>
+<p class="sub" data-i18n="k32">One chain — from the claim that rejects at the counter to the renewal that keeps it filled. Each step produces what the next step needs, and every step leaves an audit record.</p>
+<div class="wf-scroll"><div class="wf-snake">
+<div class="flow r1">
+<div class="fbox" data-i18n="k450"><i class="fas fa-cash-register"></i>Rejected claim → case</div><span class="farr"><i class="fas fa-arrow-right"></i></span>
+<div class="fbox" data-i18n="k33"><i class="fas fa-magnifying-glass-dollar"></i>Coverage on the case</div><span class="farr"><i class="fas fa-arrow-right"></i></span>
+<div class="fbox" data-i18n="k34"><i class="fas fa-list-check"></i>Document checklist</div><span class="farr"><i class="fas fa-arrow-right"></i></span>
+<div class="fbox" data-i18n="k35"><i class="fas fa-user-tag"></i>Tasks assigned</div><span class="farr"><i class="fas fa-arrow-right"></i></span>
+<div class="fbox" data-i18n="k36"><i class="fas fa-file-shield"></i>Documents collected</div><span class="farr"><i class="fas fa-arrow-right"></i></span>
+<div class="fbox" data-i18n="k37"><i class="fas fa-paper-plane"></i>Submission — prescriber or you</div><span class="farr turn"><i class="fas fa-arrow-turn-down"></i></span>
+</div>
+<div class="flow r2">
+<div class="fbox" data-i18n="k38"><i class="fas fa-hourglass-half"></i>Insurer follow-up tracked</div><span class="farr"><i class="fas fa-arrow-left"></i></span>
+<div class="fbox" data-i18n="k39"><i class="fas fa-stamp"></i>Approval / denial recorded</div><span class="farr"><i class="fas fa-arrow-left"></i></span>
+<div class="fbox" data-i18n="k451"><i class="fas fa-keyboard"></i>PMS task — auth № + test claim</div><span class="farr"><i class="fas fa-arrow-left"></i></span>
+<div class="fbox" data-i18n="k40"><i class="fas fa-rotate"></i>Expiry monitored</div><span class="farr"><i class="fas fa-arrow-left"></i></span>
+<div class="fbox" data-i18n="k41"><i class="fas fa-arrows-spin"></i>Reauthorized before it lapses</div>
+</div>
+</div></div>
+<div class="note" data-i18n="k452" style="margin-top:18px"><b>Two details we refuse to blur:</b> in Alberta, public-plan special authorization is completed and signed by the <b>prescriber</b><sup><a href="#sources">1</a></sup>, and most private prior-authorization forms are physician-completed too<sup><a href="#sources">4</a></sup> — AlgoPharma prepares the package, tracks the hand-off and records the outcome; it never submits on anyone’s behalf. And when an approval arrives, a closing task prompts your team to <b>enter the authorization number in the PMS and run a test claim</b> — the step that actually turns an approval into a paid claim.</div>
+<div class="grid4" style="margin-top:26px">
+<div class="card" style="text-align:center;padding:16px"><i class="fas fa-table-columns" style="color:var(--primary);font-size:1.3rem"></i>
+<h3 data-i18n="k42" style="font-size:.9rem;margin:9px 0 4px">One board</h3><p data-i18n="k43" style="font-size:.75rem;color:var(--muted)">Every case, every stage, one screen</p></div>
+<div class="card" style="text-align:center;padding:16px"><i class="fas fa-shield-halved" style="color:var(--primary);font-size:1.3rem"></i>
+<h3 data-i18n="k44" style="font-size:.9rem;margin:9px 0 4px">Role-appropriate</h3><p data-i18n="k45" style="font-size:.75rem;color:var(--muted)">Safe delegation to technicians</p></div>
+<div class="card" style="text-align:center;padding:16px"><i class="fas fa-clock-rotate-left" style="color:var(--primary);font-size:1.3rem"></i>
+<h3 data-i18n="k46" style="font-size:.9rem;margin:9px 0 4px">Fully audited</h3><p data-i18n="k47" style="font-size:.75rem;color:var(--muted)">Who did what, when — months later</p></div>
+<div class="card" style="text-align:center;padding:16px"><i class="fas fa-chart-column" style="color:var(--primary);font-size:1.3rem"></i>
+<h3 data-i18n="k48" style="font-size:.9rem;margin:9px 0 4px">Measured</h3><p data-i18n="k49" style="font-size:.75rem;color:var(--muted)">Processing time, gaps, denial reasons</p></div>
+</div>
+</div>
+</section>
+<!-- 4 ── FEATURES 1 ──────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k50">Core capability · 1 of 2</div>
+<h2 data-i18n="k51"><i class="fas fa-layer-group"></i>Getting the case right, first time</h2>
+<p class="sub" data-i18n="k52">The work between "the prescription arrived" and "the package is ready to send".</p>
+<div class="grid3">
+<div class="feat"><i class="fas fa-table-columns"></i><h3 data-i18n="k53">One case workspace</h3>
+<p data-i18n="k54">Every authorization case is a card moving through clear stages, showing medication, insurer, owner, next action and time-in-stage. Patient names are never displayed.</p>
+<div class="feat-mini"><div class="mk-card">
+<div class="mk-row" style="justify-content:space-between"><span class="mk-id">CASE-2026-1050</span><span class="mk-chip c-green" data-i18n="k334"><i class="fas fa-circle-check"></i> Normal</span></div>
+<div class="mk-drug">Drug B</div><div class="mk-sub">PT-4498 · Prairie Blue Cross</div>
+<div class="mk-row" style="justify-content:space-between;margin-top:5px"><span class="mk-sub" data-i18n="k340">3d in stage</span><span class="mk-avat" style="background:#2563EB">DW</span></div>
+</div></div></div>
+<div class="feat"><i class="fas fa-magnifying-glass-dollar"></i><h3 data-i18n="k55">Coverage on the case</h3>
+<p data-i18n="k56">The coverage position for that medication — likely status, criteria, required documents — with its source, version and the date a person last reviewed it.</p>
+<div class="feat-mini">
+<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 9px;font-size:.66rem;font-weight:800;color:#EA580C" data-i18n="k306">Special authorization may be required</div>
+<div class="mk-row" style="justify-content:space-between;margin-top:7px"><span class="mk-sub" data-i18n="k319">Rule version</span><b style="font-size:.66rem">2026-05</b></div>
+<div class="mk-row" style="justify-content:space-between;margin-top:3px"><span class="mk-sub" data-i18n="k321">Last human review</span><b style="font-size:.66rem">Jul 22, 2026</b></div>
+</div></div>
+<div class="feat"><i class="fas fa-file-circle-check"></i><h3 data-i18n="k57">Self-updating checklist</h3>
+<p data-i18n="k58">Requirements become a live checklist. Items move from "to collect" to "on file" as documents arrive. Versions and verification are kept.</p>
+<div class="feat-mini">
+<div class="mk-row" style="justify-content:space-between;padding:3px 0"><span style="text-decoration:line-through;opacity:.6" data-i18n="k309">Special-authorization form</span><span class="mk-chip c-green" data-i18n="k313">On file</span></div>
+<div class="mk-row" style="justify-content:space-between;padding:3px 0"><span data-i18n="k311">Baseline lab report</span><span class="mk-chip c-yellow" data-i18n="k314">To collect</span></div>
+<div class="mk-bar" style="margin-top:6px"><div style="width:50%;background:var(--ok)"></div></div>
+</div></div>
+<div class="feat"><i class="fas fa-user-tag"></i><h3 data-i18n="k59">Tasks, not memory</h3>
+<p data-i18n="k60">Chase the prescriber, request a document, confirm consent, prepare the package. Assigned, dated, owned. Pharmacist-only tasks are marked and restricted. The waiting period gets tasks too: manufacturer bridging programs<sup><a href="#sources">6</a></sup> or a pharmacist-judged emergency supply<sup><a href="#sources">7</a></sup> — recorded as options, never decided by the system.</p>
+<div class="feat-mini">
+<div class="mk-row" style="padding:3px 0"><input type="checkbox" style="width:11px;height:11px;accent-color:var(--primary)"><span style="flex:1" data-i18n="k354">Start reauthorization preparation</span><span class="mk-chip c-indigo" data-i18n="k357">AUTO</span></div>
+<div class="mk-row" style="padding:3px 0"><input type="checkbox" style="width:11px;height:11px;accent-color:var(--primary)"><span style="flex:1" data-i18n="k355">Request updated prescriber letter</span><span class="mk-avat" style="background:#0D9488">ML</span></div>
+</div></div>
+<div class="feat"><i class="fas fa-user-shield"></i><h3 data-i18n="k61">Role-appropriate access</h3>
+<p data-i18n="k62">Pharmacist, technician, billing coordinator and manager see the same case but can do different things — delegation without risk to the record.</p>
+<div class="feat-mini">
+<div class="mk-row" style="padding:3px 0"><span class="mk-avat" style="background:#0D9488">ML</span><span style="flex:1" data-i18n="k402">Technician — cannot change case status</span><i class="fas fa-lock" style="color:#CBD5E1"></i></div>
+<div class="mk-row" style="padding:3px 0"><span class="mk-avat" style="background:#4F46E5">PS</span><span style="flex:1" data-i18n="k403">Pharmacist — records the approval</span><i class="fas fa-circle-check" style="color:var(--ok)"></i></div>
+</div></div>
+<div class="feat"><i class="fas fa-robot"></i><h3 data-i18n="k63">Administrative assistant</h3>
+<p data-i18n="k64">Ask which cases are waiting on prescribers or which authorizations expire this month, and go straight there. Strictly administrative — never clinical.</p>
+<div class="feat-mini">
+<div style="background:var(--primary);color:#fff;border-radius:10px 10px 3px 10px;padding:5px 9px;font-size:.64rem;font-weight:600;margin-left:24px" data-i18n="k400">Which authorizations expire within 30 days?</div>
+<div style="background:#fff;border:1px solid var(--line);border-radius:10px 10px 10px 3px;padding:5px 9px;font-size:.64rem;margin:6px 24px 0 0"><span data-i18n="k401">3 found</span> — <b>CASE-2026-1048</b> <span class="mk-chip c-red" style="margin-left:3px">12d</span></div>
+</div></div>
+</div>
+</div>
+</section>
+<!-- 5 ── FEATURES 2 ──────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k65">Core capability · 2 of 2</div>
+<h2 data-i18n="k66"><i class="fas fa-arrows-spin"></i>After it is sent — where money is usually lost</h2>
+<p class="sub" data-i18n="k67">Follow-up, decisions, and the renewal nobody remembered.</p>
+<div class="grid3">
+<div class="feat"><i class="fas fa-phone-volume"></i><h3 data-i18n="k68">Complete contact record</h3>
+<p data-i18n="k69">Every call, fax, email and portal message with who was contacted, the outcome and the next follow-up date. Disputes are settled with a record, not a recollection.</p>
+<div class="feat-mini">
+<div class="mk-row" style="padding:3px 0"><i class="fas fa-phone" style="color:var(--primary);width:14px"></i><span style="flex:1" data-i18n="k405">Insurer confirmed receipt</span><span class="mk-sub">Aug 4</span></div>
+<div class="mk-row" style="padding:3px 0"><i class="fas fa-fax" style="color:#7C3AED;width:14px"></i><span style="flex:1" data-i18n="k406">Prescriber office requested another copy</span><span class="mk-sub">Aug 3</span></div>
+</div></div>
+<div class="feat"><i class="fas fa-hourglass-half"></i><h3 data-i18n="k70">Follow-up that surfaces itself</h3>
+<p data-i18n="k71">Expected response dates are tracked. Overdue insurer responses appear on the board instead of being discovered weeks later.</p>
+<div class="feat-mini">
+<div class="mk-row" style="justify-content:space-between;padding:3px 0"><span class="mk-id">CASE-2026-1047</span><span class="mk-chip c-red" data-i18n="k335"><i class="fas fa-bell"></i> Response overdue</span></div>
+<div class="mk-row" style="justify-content:space-between;padding:3px 0"><span class="mk-id">CASE-2026-1042</span><span class="mk-chip c-red" data-i18n="k335"><i class="fas fa-bell"></i> Response overdue</span></div>
+</div></div>
+<div class="feat"><i class="fas fa-calendar-xmark"></i><h3 data-i18n="k72">Expiry &amp; reauthorization</h3>
+<p data-i18n="k73">Approvals store their authorization number and expiry, and renewal work is scheduled ahead — with escalating visibility as the date approaches. Recording an approval also queues the PMS entry task, so the number reaches billing.</p>
+<div class="feat-mini">
+<div class="mk-row" style="justify-content:space-between"><span class="mk-id">SYN-AUTH-88213</span><b style="color:#EA580C;font-size:.8rem">23d</b></div>
+<div style="display:flex;align-items:center;gap:4px;margin-top:7px">
+<span class="risk-dot" style="background:var(--ok)"></span><span style="height:2px;flex:1;background:var(--ok)"></span>
+<span class="risk-dot" style="background:var(--ok)"></span><span style="height:2px;flex:1;background:#EA580C"></span>
+<span class="risk-dot" style="background:#EA580C;box-shadow:0 0 0 3px #FFF7ED"></span><span style="height:2px;flex:1;background:var(--line)"></span>
+<span class="risk-dot" style="background:#E5E7EB"></span></div>
+<div class="mk-sub" style="margin-top:5px" data-i18n="k345">Expiring within 30 days</div>
+</div></div>
+<div class="feat"><i class="fas fa-triangle-exclamation"></i><h3 data-i18n="k74">Risk on every case</h3>
+<p data-i18n="k75">Expiring authorization, overdue response, missing documents, approaching appeal deadline, no owner — visible at a glance, detail on hover.</p>
+<div class="feat-mini"><div style="display:flex;flex-wrap:wrap;gap:4px">
+<span class="mk-chip c-orange" data-i18n="k333"><i class="fas fa-calendar-xmark"></i> Auth expires ≤30d</span>
+<span class="mk-chip c-yellow" data-i18n="k332"><i class="fas fa-triangle-exclamation"></i> Documents missing</span>
+<span class="mk-chip c-red" data-i18n="k335"><i class="fas fa-bell"></i> Response overdue</span>
+<span class="mk-chip c-green" data-i18n="k334"><i class="fas fa-circle-check"></i> Normal</span>
+</div></div></div>
+<div class="feat"><i class="fas fa-clock-rotate-left"></i><h3 data-i18n="k76">Complete audit trail</h3>
+<p data-i18n="k77">Every status change, upload, task and communication recorded with person, role and time. "What happened on this case?" answered in seconds.</p>
+<div class="feat-mini">
+<div style="font-size:.62rem;padding:2px 0"><span class="mk-sub">Aug 3, 14:05 · Dana W.</span><br/><span data-i18n="k408">Status changed: Ready to submit → Submitted</span></div>
+<div style="font-size:.62rem;padding:2px 0;opacity:.75"><span class="mk-sub">Aug 1, 11:30 · Priya S.</span><br/><span data-i18n="k409">Uploaded Special-authorization form (v2)</span></div>
+</div></div>
+<div class="feat"><i class="fas fa-chart-column"></i><h3 data-i18n="k78">Operational reporting</h3>
+<p data-i18n="k79">Time to submission, time to decision, most-missed documents, denial reasons, expiries ahead, workload by owner and insurer.</p>
+<div class="feat-mini">
+<div style="display:flex;align-items:flex-end;gap:6px;height:44px">
+<div style="flex:1;background:#F59E0B;border-radius:3px 3px 0 0;height:55%"></div>
+<div style="flex:1;background:#8B5CF6;border-radius:3px 3px 0 0;height:30%"></div>
+<div style="flex:1;background:#06B6D4;border-radius:3px 3px 0 0;height:100%"></div>
+<div style="flex:1;background:#10B981;border-radius:3px 3px 0 0;height:70%"></div>
+<div style="flex:1;background:#991B1B;border-radius:3px 3px 0 0;height:20%"></div>
+</div>
+<div class="mk-sub" style="margin-top:5px" data-i18n="k410">Open cases by status</div>
+</div></div>
+</div>
+</div>
+</section>
+<!-- 6 ── TIME TABLE (hero) ───────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k80">Where the time goes</div>
+<h2 data-i18n="k81"><i class="fas fa-stopwatch"></i>40 minutes of admin, per case, today</h2>
+<p class="sub" data-i18n="k82">The same work with AlgoPharma. Processing is instant; what remains is the small amount of judgment and typing that should stay with a person.</p>
+<div class="tscroll"><table>
+<thead>
+<tr><th data-i18n="k83" style="width:34%">Work element</th><th data-i18n="k84" style="width:20%">Current tools</th><th data-i18n="k85" style="width:24%">AlgoPharma processing</th><th data-i18n="k86" style="width:22%">Staff time remaining</th></tr>
+</thead>
+<tbody>
+<tr><td data-i18n="k87">Finding insurance rules / forms</td><td class="was" data-i18n="k88">8 min</td><td class="now" data-i18n="k89">Seconds</td><td class="auto" data-i18n="k90">— already on the case</td></tr>
+<tr><td data-i18n="k91">Creating the case record</td><td class="was" data-i18n="k92">4 min</td><td class="now" data-i18n="k93">&lt; 1 sec</td><td class="num" data-i18n="k94">1–2 min</td></tr>
+<tr><td data-i18n="k95">Organizing and naming files</td><td class="was" data-i18n="k96">7 min</td><td class="now" data-i18n="k97">Milliseconds–seconds</td><td class="auto" data-i18n="k98">— automatic</td></tr>
+<tr><td data-i18n="k99">Determining missing documents</td><td class="was" data-i18n="k96">7 min</td><td class="now" data-i18n="k89">Seconds</td><td class="auto" data-i18n="k100">— live checklist</td></tr>
+<tr><td data-i18n="k101">Setting up tasks and reminders</td><td class="was" data-i18n="k92">4 min</td><td class="now" data-i18n="k93">&lt; 1 sec</td><td class="auto" data-i18n="k102">— auto-created</td></tr>
+<tr><td data-i18n="k103">Logging each follow-up</td><td class="was" data-i18n="k92">4 min</td><td class="now" data-i18n="k93">&lt; 1 sec</td><td class="num" data-i18n="k104">0.5–1 min</td></tr>
+<tr><td data-i18n="k105">Pre-submission completeness check</td><td class="was" data-i18n="k430">6 min</td><td class="now" data-i18n="k89">Seconds</td><td class="auto" data-i18n="k98">— automatic</td></tr>
+<tr class="total"><td data-i18n="k106">Total administrative time</td><td class="was" data-i18n="k107" style="font-size:1.15rem">40 min</td><td class="now" data-i18n="k108">Seconds to minutes</td><td class="num" data-i18n="k109" style="color:var(--ok);font-size:1.15rem">2–3 min</td></tr>
+</tbody>
+</table></div>
+<div class="big" style="margin:24px 0 0">
+<div class="bigstat"><div class="bignum" style="color:var(--ok)">37<span data-i18n="k5" style="font-size:1.2rem">min</span></div><div class="biglbl" data-i18n="k110">Saved per case</div></div>
+<div class="bigstat"><div class="bignum" style="color:var(--ok)">93<span style="font-size:1.5rem">%</span></div><div class="biglbl" data-i18n="k111">Less administrative time</div></div>
+<div class="bigstat"><div class="bignum" style="color:var(--ok)">$15</div><div class="biglbl" data-i18n="k112">Staff cost saved per case<br/>at $25/hr</div></div>
+</div>
+</div>
+</section>
+<!-- 7 ── SAVINGS TABLE ───────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k113">What that is worth</div>
+<h2 data-i18n="k114"><i class="fas fa-sack-dollar"></i>Annual staff cost recovered</h2>
+<p class="sub" data-i18n="k115">Same 37 minutes per case, applied to real case volumes. Assumes a <b>$25 / hour</b> base staff rate.</p>
+<div class="tscroll"><table>
+<thead>
+<tr><th data-i18n="k116">Pharmacy profile</th><th data-i18n="k117">SA / PA cases<br/>per month</th><th data-i18n="k118">Admin time today</th><th data-i18n="k119">Admin time with<br/>AlgoPharma</th><th data-i18n="k120">Hours recovered<br/>per year</th><th data-i18n="k121">Annual value<br/>at $25/hr</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><b data-i18n="k227">Small</b><br/><span data-i18n="k122" style="font-size:.74rem;color:var(--muted)">single store, modest SA volume</span></td>
+<td class="num">20</td><td class="was" data-i18n="k123">13.3 hrs / mo</td><td class="now" data-i18n="k124">1.0 hr / mo</td>
+<td class="num" data-i18n="k125">148 hrs</td><td class="num" style="font-size:1.15rem;color:var(--primary)">$3,700</td>
+</tr>
+<tr>
+<td><b data-i18n="k228">Medium</b><br/><span data-i18n="k126" style="font-size:.74rem;color:var(--muted)">busy or specialty-leaning store</span></td>
+<td class="num">50</td><td class="was" data-i18n="k127">33.3 hrs / mo</td><td class="now" data-i18n="k128">2.5 hrs / mo</td>
+<td class="num" data-i18n="k129">370 hrs</td><td class="num" style="font-size:1.15rem;color:var(--primary)">$9,250</td>
+</tr>
+<tr>
+<td><b data-i18n="k229">Large / group</b><br/><span data-i18n="k130" style="font-size:.74rem;color:var(--muted)">high-volume or multi-store</span></td>
+<td class="num">100</td><td class="was" data-i18n="k131">66.7 hrs / mo</td><td class="now" data-i18n="k132">5.0 hrs / mo</td>
+<td class="num" data-i18n="k133">740 hrs</td><td class="num" style="font-size:1.15rem;color:var(--primary)">$18,500</td>
+</tr>
+</tbody>
+</table></div>
+<div class="grid3" style="margin-top:22px">
+<div class="card" style="text-align:center;background:var(--ok-soft);border-color:#A7F3D0">
+<div data-i18n="k134" style="font-size:1.9rem;font-weight:800;color:#065F46">≈ 4 weeks</div>
+<div data-i18n="k135" style="font-size:.76rem;color:#047857;font-weight:600;margin-top:4px">of staff capacity returned<br/>to a small pharmacy each year</div></div>
+<div class="card" style="text-align:center;background:var(--ok-soft);border-color:#A7F3D0">
+<div data-i18n="k136" style="font-size:1.9rem;font-weight:800;color:#065F46">≈ 10 weeks</div>
+<div data-i18n="k137" style="font-size:.76rem;color:#047857;font-weight:600;margin-top:4px">for a medium pharmacy —<br/>two and a half months of one person</div></div>
+<div class="card" style="text-align:center;background:var(--ok-soft);border-color:#A7F3D0">
+<div data-i18n="k138" style="font-size:1.9rem;font-weight:800;color:#065F46">≈ 0.4 FTE</div>
+<div data-i18n="k139" style="font-size:.76rem;color:#047857;font-weight:600;margin-top:4px">for a large pharmacy or group —<br/>0.4 of a full-time position</div></div>
+</div>
+<div class="note" data-i18n="k140">
+<b>How this is calculated:</b> (cases per month) × 12 × (37 min ÷ 60) × $25.
+        These are modelled figures based on the workflow breakdown on the previous slide, not audited results —
+        they are meant to be replaced with your own case volume and staff rate. Staff time is the conservative,
+        defensible part of the business case; fewer denials, fewer lapsed authorizations and better patient retention
+        are genuine upside we recommend <b>measuring in a pilot rather than assuming</b>.
+      </div>
+</div>
+</section>
+<!-- 8 ── BEYOND TIME ─────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k141">Beyond the hours</div>
+<h2 data-i18n="k142"><i class="fas fa-arrow-trend-up"></i>What else changes — and how honest we are about it</h2>
+<p class="sub" data-i18n="k143">These matter more to a pharmacy owner than the hourly maths. They are also harder to attribute, so we put them here rather than in the headline number.</p>
+<div class="tscroll"><table>
+<thead><tr><th data-i18n="k144" style="width:26%">Effect</th><th data-i18n="k145" style="width:44%">Why it matters</th><th data-i18n="k146" style="width:30%">Our honest caveat</th></tr></thead>
+<tbody>
+<tr><td data-i18n="k147"><b>Fewer avoidable denials</b></td>
+<td data-i18n="k148">An incomplete package means a full rework cycle — hours of work plus weeks of delay for the patient.</td>
+<td class="auto" data-i18n="k149">Depends on your current first-time-complete rate, which most pharmacies do not measure yet.</td></tr>
+<tr><td data-i18n="k150"><b>Fewer lapsed authorizations</b></td>
+<td data-i18n="k151">A lapse means interrupted therapy, an emergency scramble, and an unhappy patient at the counter.</td>
+<td class="auto" data-i18n="k152">Most pharmacies do not know their lapse count until they start tracking it.</td></tr>
+<tr><td data-i18n="k153"><b>Patient retention</b></td>
+<td data-i18n="k154">A patient whose high-cost therapy is interrupted may move to another pharmacy permanently.</td>
+<td class="auto" data-i18n="k155">Attribution is genuinely difficult — do not build the case on this alone.</td></tr>
+<tr><td data-i18n="k156"><b>Capacity to grow</b></td>
+<td data-i18n="k157">Recovered hours absorb more specialty prescriptions without adding headcount.</td>
+<td class="auto" data-i18n="k158">Only converts to revenue if the local demand exists.</td></tr>
+<tr><td data-i18n="k159"><b>Lower key-person risk</b></td>
+<td data-i18n="k160">Prior-auth knowledge stops living with one experienced person.</td>
+<td class="auto" data-i18n="k161">Shows up as resilience, not as a line item.</td></tr>
+</tbody>
+</table></div>
+<div class="card" style="margin-top:20px;border-color:var(--primary);background:var(--primary-soft)">
+<p data-i18n="k162" style="font-size:.92rem;color:var(--primary-dark)">
+<i class="fas fa-scale-balanced" style="margin-right:9px"></i>
+<b>Our position:</b> build the business case on the staff time — it is measurable and defensible.
+          Treat denial reduction, lapse prevention and retention as upside to be verified. A vendor that puts those in the headline number is guessing.
+        </p>
+</div>
+</div>
+</section>
+<!-- 8b ── LANDSCAPE ─────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k453">Why nothing does this today</div>
+<h2 data-i18n="k454"><i class="fas fa-chess-board"></i>The tools around you each hold a piece — none runs the case</h2>
+<p class="sub" data-i18n="k455">The honest competitive picture in Canada — and the reason this gap exists at all.</p>
+<div class="tscroll"><table>
+<thead><tr><th data-i18n="k456" style="width:24%">What pharmacies lean on today</th><th data-i18n="k457" style="width:36%">What it genuinely does well</th><th data-i18n="k458" style="width:40%">What it leaves open</th></tr></thead>
+<tbody>
+<tr><td data-i18n="k459"><b>PMS built-ins</b><br/><span style="font-size:.74rem;color:var(--muted)">Kroll · PharmaClik Rx</span></td><td data-i18n="k460">Records the authorization number, notes and adjudication; batches refill-authorization requests<sup><a href="#sources">8</a></sup></td><td data-i18n="k461">No case stages, no per-insurer document checklist, no expiry-driven work queue — the case itself lives outside the system</td></tr>
+<tr><td data-i18n="k462"><b>Insurer portals</b><br/><span style="font-size:.74rem;color:var(--muted)">Alberta Blue Cross · Sun Life · Canada Life…</span></td><td data-i18n="k463">Check the status of a submitted request, download the right form<sup><a href="#sources">3</a></sup></td><td data-i18n="k464">One insurer per portal — nothing aggregates a pharmacy’s cases across the public plan and every private carrier</td></tr>
+<tr><td data-i18n="k465"><b>The status quo</b><br/><span style="font-size:.74rem;color:var(--muted)">forms + fax + sticky notes + memory</span></td><td data-i18n="k466">Flexible, familiar and free — it does “work”</td><td data-i18n="k467">It is exactly the failure pattern two pages back: re-discovery, key-person risk, and expiries found at the counter</td></tr>
+<tr><td data-i18n="k468"><b>US ePA platforms</b><br/><span style="font-size:.74rem;color:var(--muted)">CoverMyMeds and similar</span></td><td data-i18n="k469">Prove the category works — electronic prior authorization at national scale, prescriber-side<sup><a href="#sources">9</a></sup></td><td data-i18n="k470">Built on US standards and US payers — they do not touch Canadian public-plan special authorization</td></tr>
+</tbody></table></div>
+<div class="note" data-i18n="k472" style="margin-top:18px"><b>What that means for defensibility:</b> the durable assets are the <b>workflow itself</b> and the <b>human-reviewed rules library</b> — and, next on the roadmap, <b>PMS integration</b> (Kroll, PharmaClik Rx), which removes double entry and closes the approval-to-billing loop. We name it plainly because it is the biggest lever after the workflow, not a footnote.</div>
+<div class="grid3" style="margin-top:20px">
+<div class="card" style="padding:18px"><i class="fas fa-sliders" style="color:var(--primary);font-size:1.2rem"></i>
+<h3 data-i18n="k473" style="font-size:.9rem;margin:9px 0 5px">Appeal windows are configurable</h3><p data-i18n="k474" style="font-size:.76rem;color:var(--muted)">Public-plan reconsideration and each private insurer’s appeal process run on different clocks<sup><a href="#sources">4,10</a></sup> — deadlines are set per insurer, never hard-coded.</p></div>
+<div class="card" style="padding:18px"><i class="fas fa-box-archive" style="color:var(--primary);font-size:1.2rem"></i>
+<h3 data-i18n="k475" style="font-size:.9rem;margin:9px 0 5px">Closed cases archive, not vanish</h3><p data-i18n="k476" style="font-size:.76rem;color:var(--muted)">Alberta pharmacies keep patient records ten years past the last service<sup><a href="#sources">2</a></sup>. Closed cases move to a read-only archive with their full audit trail, aligned to your retention policy.</p></div>
+<div class="card" style="padding:18px"><i class="fas fa-location-dot" style="color:var(--primary);font-size:1.2rem"></i>
+<h3 data-i18n="k477" style="font-size:.9rem;margin:9px 0 5px">Alberta first — said out loud</h3><p data-i18n="k478" style="font-size:.76rem;color:var(--muted)">The rules library launches around Alberta Blue Cross special authorization. Ontario’s EAP and Limited Use system works differently<sup><a href="#sources">10</a></sup> and becomes its own rollout — one province’s rules do not silently generalize.</p></div>
+</div>
+</div>
+</section>
+<!-- 9 ── DATA NEEDED ─────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k163">What we need from you</div>
+<h2 data-i18n="k164"><i class="fas fa-database"></i>A deliberately small set of data</h2>
+<p class="sub" data-i18n="k165">An administrative workbench, not a clinical record. Enough to track the case — and nothing more.</p>
+<div class="grid2">
+<div class="card" style="display:flex;flex-direction:column">
+<div class="pill p-teal" data-i18n="k166" style="margin-bottom:14px"><i class="fas fa-check"></i> What a case needs</div>
+<div class="chk"><i class="fas fa-circle-check"></i><span data-i18n="k167"><b>De-identified patient reference</b> — your patient ID, aliased</span></div>
+<div class="chk"><i class="fas fa-circle-check"></i><span data-i18n="k168"><b>Medication, DIN, dosage form</b> — from the prescription already in your PMS</span></div>
+<div class="chk"><i class="fas fa-circle-check"></i><span data-i18n="k169"><b>Insurer, plan, coverage category</b> — from the insurance card</span></div>
+<div class="chk"><i class="fas fa-circle-check"></i><span data-i18n="k170"><b>Prescriber office contact</b> — for chasing documents</span></div>
+<div class="chk"><i class="fas fa-circle-check"></i><span data-i18n="k171"><b>Case owner</b> — assigned by you</span></div>
+<div class="chk"><i class="fas fa-circle-check"></i><span data-i18n="k172"><b>Key dates</b> — submitted, expected response, approval, expiry</span></div>
+<div class="chk"><i class="fas fa-circle-check"></i><span data-i18n="k173"><b>Authorization number</b> and the <b>documents received</b></span></div>
+<p class="data-foot" data-i18n="k174" style="font-size:.76rem;color:var(--muted);border-top:1px solid var(--line)">
+            Set up once: your stores, your team and their roles, your preferred lead times.
+            <b>Coverage rules are maintained and human-reviewed on our side</b> — you consume them, you don't build them.</p>
+</div>
+<div class="card" style="border-color:#FECACA;background:#FFFBFB;display:flex;flex-direction:column">
+<div class="pill p-red" data-i18n="k175" style="margin-bottom:14px"><i class="fas fa-ban"></i> What we deliberately do not need</div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k176">No diagnosis, symptoms or clinical notes as data</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k177">No lab values, vitals or clinical scores</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k178">No patient names in daily working views</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k179">No dispensing history, adherence or refill patterns</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k180">No connection to your dispensing engine — nothing written back, no claim transmitted</span></div>
+<p class="data-foot" data-i18n="k181" style="font-size:.78rem;color:#7F1D1D;border-top:1px solid #FECACA">
+<b>This is deliberate, not a gap.</b> Minimizing identifiable clinical data keeps the feature administrative
+            and makes the privacy conversation materially simpler than for a clinical system — under PIPEDA and the
+            applicable provincial statute (Alberta <i>HIA</i>, Ontario <i>PHIPA</i>, BC <i>PIPA</i>).
+            Your privacy officer and counsel remain responsible for the final assessment.</p>
+</div>
+</div>
+<div class="note" data-i18n="k182"><b>Starting is light.</b> Begin by entering only your currently open cases — history is not required. <b>PMS integration (Kroll, PharmaClik Rx) is the next milestone, not a maybe</b>: it removes double entry and closes the approval-to-billing loop. Value starts before it — and compounds with it.</div>
+</div>
+</section>
+<!-- 10 ── BOUNDARIES ────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k183">Scope and safety</div>
+<h2 data-i18n="k184"><i class="fas fa-shield-halved"></i>What AlgoPharma does not do</h2>
+<p class="sub" data-i18n="k185">Stated plainly, because it defines the risk profile of adopting it — and because a partner should hear it from us first.</p>
+<div class="grid2">
+<div class="card" style="border-color:#FECACA">
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k186">Does <b>not</b> diagnose, interpret symptoms or assess clinical suitability</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k187">Does <b>not</b> recommend medications, suggest switching, or advise on dosing</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k188">Does <b>not</b> renew prescriptions or contact prescribers automatically</span></div>
+</div>
+<div class="card" style="border-color:#FECACA">
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k189">Does <b>not</b> approve insurance, adjudicate claims or guarantee reimbursement</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k190">Does <b>not</b> replace your PMS, insurer portals or submission channels</span></div>
+<div class="chk no"><i class="fas fa-circle-xmark"></i><span data-i18n="k191">Does <b>not</b> replace pharmacist or physician judgment</span></div>
+</div>
+</div>
+<div class="card" style="margin-top:20px;background:var(--primary-soft);border-color:var(--primary)">
+<p data-i18n="k192" style="font-size:.95rem;color:var(--primary-dark);text-align:center">
+          Final clinical decisions remain with the <b>prescribing physician and pharmacist</b>.
+          Final reimbursement decisions remain with the <b>insurer</b>.<br/>
+          AlgoPharma organizes the administrative work around them.
+        </p>
+</div>
+<div class="grid3" style="margin-top:20px">
+<div class="card" style="text-align:center;padding:16px"><i class="fas fa-user-check" style="color:var(--primary);font-size:1.2rem"></i>
+<h3 data-i18n="k193" style="font-size:.88rem;margin:8px 0 4px">Human-reviewed rules</h3><p data-i18n="k194" style="font-size:.74rem;color:var(--muted)">Every rule carries a version, effective date and named reviewer</p></div>
+<div class="card" style="text-align:center;padding:16px"><i class="fas fa-comment-slash" style="color:var(--primary);font-size:1.2rem"></i>
+<h3 data-i18n="k195" style="font-size:.88rem;margin:8px 0 4px">Assistant refuses clinical questions</h3><p data-i18n="k196" style="font-size:.74rem;color:var(--muted)">Medication choice, switching and dosing are redirected to the pharmacist</p></div>
+<div class="card" style="text-align:center;padding:16px"><i class="fas fa-file-signature" style="color:var(--primary);font-size:1.2rem"></i>
+<h3 data-i18n="k197" style="font-size:.88rem;margin:8px 0 4px">Careful language throughout</h3><p data-i18n="k198" style="font-size:.74rem;color:var(--muted)">"May require" — never a promise of coverage</p></div>
+</div>
+</div>
+</section>
+<!-- 11 ── PILOT ─────────────────────────────────────── -->
+<section class="slide">
+<div class="wrap">
+<div class="eyebrow" data-i18n="k199">Proving it</div>
+<h2 data-i18n="k200"><i class="fas fa-flask-vial"></i>Verify the numbers in your own pharmacy</h2>
+<p class="sub" data-i18n="k201">A 60-day pilot needs four measurements. The feature produces three of them automatically.</p>
+<div class="grid4">
+<div class="card"><div class="pill p-gray" data-i18n="k202" style="margin-bottom:10px">Step 1 · you</div>
+<h3 data-i18n="k203" style="font-size:.92rem;margin-bottom:6px">Baseline, two weeks</h3>
+<p data-i18n="k204" style="font-size:.78rem;color:var(--muted)">Note handling time on SA cases. Count open cases, cases waiting on documents, and authorizations that lapsed last year.</p></div>
+<div class="card"><div class="pill p-teal" data-i18n="k205" style="margin-bottom:10px">Step 2 · automatic</div>
+<h3 data-i18n="k206" style="font-size:.92rem;margin-bottom:6px">Creation → submission</h3>
+<p data-i18n="k207" style="font-size:.78rem;color:var(--muted)">How long a case takes to become a complete, sent package.</p></div>
+<div class="card"><div class="pill p-teal" data-i18n="k208" style="margin-bottom:10px">Step 3 · automatic</div>
+<h3 data-i18n="k209" style="font-size:.92rem;margin-bottom:6px">Submission → decision</h3>
+<p data-i18n="k210" style="font-size:.78rem;color:var(--muted)">Insurer turnaround, and how much of it was waiting on you.</p></div>
+<div class="card"><div class="pill p-teal" data-i18n="k211" style="margin-bottom:10px">Step 4 · automatic</div>
+<h3 data-i18n="k212" style="font-size:.92rem;margin-bottom:6px">First-time-complete rate</h3>
+<p data-i18n="k213" style="font-size:.78rem;color:var(--muted)">Submissions that proceed with no "additional information required" round.</p></div>
+</div>
+</div>
+</section>
+<!-- 12 ── CLOSE ─────────────────────────────────────── -->
+<section class="slide center">
+<div class="wrap">
+<div class="pill p-green" data-i18n="k215" style="margin-bottom:22px"><i class="fas fa-circle-check"></i> Ready to walk through live</div>
+<h1 data-i18n="k226" style="font-size:2.6rem">From <span style="color:var(--danger)">40 minutes</span><br/>to <span style="color:var(--ok)">2–3 minutes</span> per case.</h1>
+<p class="sub" data-i18n="k218" style="margin-top:20px;font-size:1.02rem">
+        Coverage, documents, tasks, follow-up, expiry and audit — in one workflow that sits alongside the tools your pharmacy already uses.
+      </p>
+<div class="big">
+<div class="bigstat"><div class="bignum">$3,700</div><div class="biglbl" data-i18n="k219">Small pharmacy<br/>20 cases / month</div></div>
+<div class="bigstat"><div class="bignum">$9,250</div><div class="biglbl" data-i18n="k220">Medium pharmacy<br/>50 cases / month</div></div>
+<div class="bigstat"><div class="bignum">$18,500</div><div class="biglbl" data-i18n="k221">Large / group<br/>100 cases / month</div></div>
+</div>
+<p data-i18n="k222" style="font-size:.74rem;color:var(--muted);margin-bottom:26px">Annual staff cost recovered at a $25/hour rate · modelled figures, to be validated in a pilot</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<a class="cta" data-i18n="k10" href="demo2.html"><i class="fas fa-circle-play"></i> Open the live demo</a>
+<button class="cta ghost" data-i18n="k223" onclick="go(0)"><i class="fas fa-rotate-left"></i> Back to start</button>
+</div>
+<div id="sources" style="max-width:880px;margin:34px auto 0;text-align:left">
+<div data-i18n="k479" style="font-size:.78rem;font-weight:800;color:var(--ink);margin-bottom:8px"><i class="fas fa-book"></i> Sources</div>
+<ol style="font-size:.66rem;color:var(--muted);line-height:1.7;padding-left:18px">
+<li data-i18n="k480"><a href="https://www.alberta.ca/drug-benefit-list-and-drug-review-process" target="_blank" rel="noopener">Alberta.ca — Drug Benefit List and drug review process</a>: special-authorization requests under the public plan are completed by the prescriber.</li>
+<li data-i18n="k481"><a href="https://abpharmacy.ca/wp-content/uploads/RecordRetentionChart.pdf" target="_blank" rel="noopener">Alberta College of Pharmacy — record retention chart</a>: patient records kept 10 years past the last pharmacy service (Standard 8.8).</li>
+<li data-i18n="k482"><a href="https://www.ab.bluecross.ca/provider/type/pharmacy/home.php" target="_blank" rel="noopener">Alberta Blue Cross — pharmacy provider services</a>: the per-insurer channel for special-authorization status inquiries.</li>
+<li data-i18n="k483"><a href="https://www.sunlife.ca/en/support/finding-documents-and-forms/prior-authorization-forms/" target="_blank" rel="noopener">Sun Life — prior authorization forms</a>: physician-completed forms; requests reviewed within five business days.</li>
+<li data-i18n="k484"><a href="https://www.canadalife.com/content/dam/canadalife/documents/forms/you-and-your-family/1-0-employer/1-3-request-an-assessment/1-3-2-prior-auth-drugs/en/glp1-m6453.pdf" target="_blank" rel="noopener">Canada Life — drug prior-authorization form</a>: incomplete forms delay assessment — the round-trip this feature is built to avoid.</li>
+<li data-i18n="k485"><a href="https://www.cmaj.ca/content/195/46/E1565" target="_blank" rel="noopener">CMAJ (2023) — manufacturer patient support programs in Canada</a>: about 1 in 10 marketed drugs has a PSP; most offer reimbursement navigation and bridging supply.</li>
+<li data-i18n="k486"><a href="https://abpharmacy.ca/regulated-members/practice-resources/need-to-know/clarifying-prescribing-authority-for-pharmacists/" target="_blank" rel="noopener">Alberta College of Pharmacy — prescribing authority</a>: all Alberta pharmacists may prescribe in an emergency; a limited, exceptional authority.</li>
+<li data-i18n="k487"><a href="https://www.pharmacytechnologysolutions.ca/pharmaclik-rx-doc/Content/Resources/PDFs/PharmaClik%20Rx%202.6%20Release%20Documentation.pdf" target="_blank" rel="noopener">McKesson — PharmaClik Rx documentation</a> and <a href="https://www.telus.com/en/health/health-professionals/pharmacies/kroll" target="_blank" rel="noopener">TELUS Health — Kroll</a>: PMS strengths are dispensing, adjudication and batch refill-authorization requests — not cross-insurer case management.</li>
+<li data-i18n="k488"><a href="https://www.covermymeds.com/main/support/general/what-is-electronic-prior-authorization/" target="_blank" rel="noopener">CoverMyMeds — what is electronic prior authorization</a>: US ePA under the NCPDP SCRIPT standard.</li>
+<li data-i18n="k489"><a href="https://www.ontario.ca/page/applying-exceptional-access-program" target="_blank" rel="noopener">Ontario — Exceptional Access Program</a>: prescriber-submitted via SADIE or fax; decisions take 3 days to 6 weeks — a different system from Alberta special authorization.</li>
+</ol></div>
+<p data-i18n="k224" style="font-size:.7rem;color:var(--muted);margin-top:34px;max-width:760px;margin-left:auto;margin-right:auto;line-height:1.6">
+        AlgoPharma provides insurance coverage information and pharmacy administrative workflow support. It does not provide
+        diagnostic, treatment, prescribing, dosing, medication-switching or clinical suitability advice. Final clinical decisions
+        are made by the prescribing physician and pharmacist. Final reimbursement decisions are made by the insurer.
+        All figures shown are illustrative models based on stated assumptions; the demonstration uses synthetic data only.
+      </p>
+</div>
+</section>
+</div>
+<div class="dots" id="dots"></div>
+<button aria-label="Back to top" class="totop" id="totop" onclick="go(0)"><i class="fas fa-arrow-up"></i></button>
+<script>
+'use strict';
+document.documentElement.classList.add('js');
+
+const slides = [...document.querySelectorAll('.slide')];
+const LABELS = ['Overview', 'The problem', 'The workflow', 'Capability 1', 'Capability 2',
+                'Time per case', 'Annual savings', 'Beyond the hours', 'The landscape', 'Data needed',
+                'Boundaries', 'Pilot', 'Summary'];
+
+// ----- right-hand dot rail -----
+document.getElementById('dots').innerHTML = slides
+  .map((_, n) => `<span onclick="go(${n})" data-label="${LABELS[n] || 'Slide ' + (n + 1)}"></span>`).join('');
+const dots = [...document.querySelectorAll('.dots span')];
+
+// jump to a section (kept as go() so in-slide buttons keep working)
+function go(n) {
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  slides[n].scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ----- scroll-driven progress bar + active dot + back-to-top -----
+const bar = document.getElementById('bar');
+const totop = document.getElementById('totop');
+let ticking = false;
+
+function onScroll() {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+  totop.classList.toggle('on', window.scrollY > window.innerHeight * 0.6);
+
+  // the active section is the one covering the middle of the viewport
+  const mid = window.scrollY + window.innerHeight / 2;
+  let active = 0;
+  slides.forEach((s, n) => { if (s.offsetTop <= mid) active = n; });
+  dots.forEach((d, n) => d.classList.toggle('on', n === active));
+  ticking = false;
+}
+window.addEventListener('scroll', () => {
+  if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
+}, { passive: true });
+window.addEventListener('resize', onScroll, { passive: true });
+
+// keep the two data-card footnotes the same height, so their separator
+// lines sit level at any width and in either language
+function levelDataFeet() {
+  const f = document.querySelectorAll('.data-foot');
+  if (f.length !== 2) return;
+  f.forEach(e => e.style.minHeight = '0');
+  // fractional heights + ceil, so integer rounding can't leave a 1px offset
+  const h = Math.ceil(Math.max(f[0].getBoundingClientRect().height, f[1].getBoundingClientRect().height));
+  f.forEach(e => e.style.minHeight = h + 'px');
+}
+window.addEventListener('resize', levelDataFeet, { passive: true });
+
+// ----- reveal content as it enters the viewport -----
+slides.forEach((s, n) => { if (n > 0) s.querySelector('.wrap').classList.add('rev'); });
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('show'); io.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.rev').forEach(el => io.observe(el));
+
+// ----- keyboard: Home/End jump to the ends; arrows/space scroll natively -----
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea')) return;
+  if (e.key === 'Home') { e.preventDefault(); go(0); }
+  if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+});
+
+// ===== i18n =====
+// Every translatable element carries data-i18n; English lives in the markup itself,
+// so the page still reads correctly if this script never runs.
+const ZH = {"k0": "新功能 · 保险与特殊授权工作流", "k1": "示意模型 · 合成演示数据", "k2": "<i class=\"fas fa-plug\"></i> 与药房现有系统及保险方渠道并行使用", "k3": "有序化。", "k4": "全新的<b>「保险与特殊授权工作流」功能</b>，将保险覆盖信息、特殊授权准备、文件、任务、保险方跟进与授权到期监控整合进<b>同一套工作流</b>——它内置于您已在使用的 AlgoPharma 平台，而不是又一个需要引入的新系统。", "k5": "分钟", "k6": "目前每宗案件的<br/>行政处理时间", "k7": "使用 AlgoPharma 后<br/>每宗案件的人工时间", "k8": "$1.85万", "k9": "每月 100 宗案件时<br/>每年可收回的人力成本", "k10": "<i class=\"fas fa-circle-play\"></i> 打开在线演示", "k11": "<i class=\"fas fa-arrow-down\"></i> 向下浏览全篇", "k12": "行政工作流功能。并非临床决策支持、处方开具或保险裁定工具。", "k13": "向下滚动", "k14": "当前的问题", "k15": "<i class=\"fas fa-puzzle-piece\"></i>特殊授权工作散落在各处", "k16": "柜台上的传真、某个同事脑子里的记忆、一张表格、一个保险方门户、一条电话排队、一堆 PDF 文件。", "k17": "<i class=\"fas fa-triangle-exclamation\"></i> 这些问题没人能立刻回答", "k18": "这宗案件现在进行到哪一步？", "k19": "还缺什么材料？", "k20": "下一步由谁负责？", "k21": "什么时候该催保险方？", "k22": "授权什么时候到期？", "k23": "我们究竟提交了什么、什么时候提交的？", "k24": "<i class=\"fas fa-clock\" style=\"color:var(--danger);margin-right:8px\"></i>隐性成本：反复重新确认", "k25": "最大的成本并不在某一个环节，而是反复重新弄清楚这宗案件是什么、还缺什么、上一次是谁在跟。每宗案件都要发生好几次，却从来不会出现在任何报表上。", "k26": "<i class=\"fas fa-user-lock\" style=\"color:var(--warn);margin-right:8px\"></i>关键人员风险", "k27": "特殊授权的经验通常只掌握在一两位资深员工手里。他们休假时，复杂案件就会停滞；他们离职时，经验也一并带走。", "k28": "<i class=\"fas fa-calendar-xmark\" style=\"color:var(--danger);margin-right:8px\"></i>在柜台才发现授权已失效", "k29": "授权是悄无声息到期的。药房通常是在患者站在柜台前、理赔被拒时才发现——原本可以从容安排的工作瞬间变成紧急事件。", "k30": "功能构成", "k31": "<i class=\"fas fa-diagram-project\"></i>一条打通的工作流", "k32": "一条链条——从柜台被拒的那笔理赔，到按时完成、不让治疗中断的续期。每一步都会产出下一步所需的内容，并且每一步都留下审计记录。", "k33": "<i class=\"fas fa-magnifying-glass-dollar\"></i>案件上的覆盖信息", "k34": "<i class=\"fas fa-list-check\"></i>文件清单", "k35": "<i class=\"fas fa-user-tag\"></i>任务分派", "k36": "<i class=\"fas fa-file-shield\"></i>收集文件", "k37": "<i class=\"fas fa-paper-plane\"></i>提交 —— 处方医生或贵方渠道", "k38": "<i class=\"fas fa-hourglass-half\"></i>跟踪保险方回复", "k39": "<i class=\"fas fa-stamp\"></i>记录批准或拒赔", "k40": "<i class=\"fas fa-rotate\"></i>监控授权到期", "k41": "<i class=\"fas fa-arrows-spin\"></i>在失效前完成重新授权", "k42": "一块看板", "k43": "所有案件、所有阶段，同一屏幕", "k44": "权限分明", "k45": "可安全地授权给技师执行", "k46": "全程审计", "k47": "几个月后仍可追溯谁、何时、做了什么", "k48": "可被衡量", "k49": "处理时长、缺口、拒赔原因", "k50": "核心能力 · 第 1 / 2 部分", "k51": "<i class=\"fas fa-layer-group\"></i>一次就把案件做对", "k52": "从「处方送到」到「材料可以提交」之间的全部工作。", "k53": "统一案件工作台", "k54": "每宗授权案件都是一张卡片，在清晰的阶段之间流转，显示药物、保险方、负责人、下一步动作及停留时长。界面从不显示患者姓名。", "k55": "覆盖信息直接呈现在案件上", "k56": "该药物的覆盖情况——可能状态、适用条件、所需文件——并附带信息来源、版本，以及人工最后审核的日期。", "k57": "自动更新的文件清单", "k58": "覆盖要求会转化为动态清单。文件到位后，条目自动从「待收集」变为「已在档」，并保留版本与核验记录。", "k59": "任务化，而不是靠记忆", "k60": "催医生、索取文件、确认患者同意书、准备提交材料——都有负责人、有截止日期。仅限药剂师处理的任务会被标记并加以限制。等待决定期间同样有任务可做：厂商过渡供药 / 患者支持项目<sup><a href=\"#sources\">6</a></sup>，或由药剂师判断的紧急供药<sup><a href=\"#sources\">7</a></sup>——系统只记录选项，绝不代作决定。", "k61": "按角色划分权限", "k62": "药剂师、技师、报销专员与管理者看到同一宗案件，但可执行的操作不同——既能放手分工，又不会危及记录完整性。", "k63": "行政助手", "k64": "直接询问哪些案件在等医生文件、哪些授权本月到期，并一键跳转。严格限于行政范围，绝不涉及临床。", "k65": "核心能力 · 第 2 / 2 部分", "k66": "<i class=\"fas fa-arrows-spin\"></i>提交之后——利润通常在这里流失", "k67": "跟进、决定，以及那次没人记得的续期。", "k68": "完整的沟通记录", "k69": "每一通电话、传真、邮件与门户消息，都记录联系对象、结果与下次跟进日期。出现争议时靠记录说话，而不是靠回忆。", "k70": "会主动浮现的跟进提醒", "k71": "系统会跟踪预计回复日期。保险方超期未回复会直接显示在看板上，而不是几周后才被发现。", "k72": "到期与重新授权", "k73": "批准后会存下授权编号与到期日，续期工作提前排入日程——并随日期临近逐级提升提醒强度。记录批准的同时会排入 PMS 录入任务，让授权号真正进入计费环节。", "k74": "每宗案件都标注风险", "k75": "授权即将到期、回复超期、缺少文件、申诉期限临近、无人负责——一眼可见，悬停可查看详情。", "k76": "完整审计轨迹", "k77": "每次状态变更、上传、任务与沟通都记录人员、角色与时间。「这宗案件到底发生了什么？」几秒就能回答。", "k78": "运营报表", "k79": "提交耗时、决定耗时、最常缺失的文件、拒赔原因、即将到期的授权，以及按负责人和保险方划分的工作量。", "k80": "时间都花在哪里", "k81": "<i class=\"fas fa-stopwatch\"></i>目前每宗案件需要 40 分钟行政时间", "k82": "同样的工作交给 AlgoPharma：处理本身瞬间完成，剩下的只是本就应由人来判断和录入的少量内容。", "k83": "工作环节", "k84": "现有工具", "k85": "AlgoPharma 处理耗时", "k86": "仍需的人工时间", "k87": "查找保险规则 / 表格", "k88": "8 分钟", "k89": "数秒", "k90": "— 已在案件上", "k91": "建立案件记录", "k92": "4 分钟", "k93": "＜1 秒", "k94": "1–2 分钟", "k95": "整理与命名文件", "k96": "7 分钟", "k97": "毫秒–数秒", "k98": "— 自动完成", "k99": "确认缺少哪些文件", "k100": "— 动态清单", "k101": "设置任务与提醒", "k102": "— 自动创建", "k103": "记录每次跟进", "k104": "0.5–1 分钟", "k105": "提交前的完整性检查", "k106": "行政时间合计", "k107": "40 分钟", "k108": "数秒至数分钟", "k109": "2–3 分钟", "k110": "每宗案件节省", "k111": "行政时间减少", "k112": "按 $25/小时计<br/>每宗案件节省的人力成本", "k113": "这意味着多少价值", "k114": "<i class=\"fas fa-sack-dollar\"></i>每年可收回的人力成本", "k115": "同样按每宗案件 37 分钟计算，套用到真实案件量。假设人工成本为<b>每小时 $25</b>。", "k116": "药房规模", "k117": "每月特殊授权 /<br/>预先授权案件量", "k118": "目前行政时间", "k119": "使用 AlgoPharma 后<br/>的行政时间", "k120": "每年收回<br/>的工时", "k121": "按 $25/小时计<br/>的年度价值", "k122": "单店，特殊授权量不大", "k123": "13.3 小时 / 月", "k124": "1.0 小时 / 月", "k125": "148 小时", "k126": "业务繁忙或偏专科用药的门店", "k127": "33.3 小时 / 月", "k128": "2.5 小时 / 月", "k129": "370 小时", "k130": "高业务量或多门店", "k131": "66.7 小时 / 月", "k132": "5.0 小时 / 月", "k133": "740 小时", "k134": "≈ 4 周", "k135": "小型药房每年<br/>可收回的人力产能", "k136": "≈ 10 周", "k137": "中型药房——<br/>相当于一名员工约两个半月", "k138": "≈ 0.4 个全职", "k139": "大型药房或连锁集团——<br/>相当于 0.4 个全职岗位", "k140": "<b>计算方式：</b>（每月案件量）× 12 ×（37 分钟 ÷ 60）× $25。这些是基于上一页工作流拆解得出的<b>测算数字</b>，并非经审计的实测结果，应替换为贵药房自身的案件量与人力成本。人力时间是商业测算中较为保守、可站得住脚的部分；而减少拒赔、减少授权失效与提升患者留存属于真实存在的额外收益，我们建议<b>在试点中实测，而非直接假设</b>。", "k141": "时间之外", "k142": "<i class=\"fas fa-arrow-trend-up\"></i>还会带来什么改变——以及我们对此的坦诚说明", "k143": "对药房老板而言，这些往往比工时账更重要。但它们也更难归因，因此我们把它们放在这里，而不是写进标题数字里。", "k144": "影响", "k145": "为什么重要", "k146": "我们的坦诚说明", "k147": "<b>减少可避免的拒赔</b>", "k148": "材料不齐意味着整轮返工——耗费数小时人力，并让患者多等数周。", "k149": "取决于贵药房目前的一次性提交完整率，而多数药房尚未统计这一指标。", "k150": "<b>减少授权失效</b>", "k151": "一次失效意味着治疗中断、紧急补救，以及柜台前不满的患者。", "k152": "多数药房在开始统计之前，并不知道自己每年失效了多少次。", "k153": "<b>患者留存</b>", "k154": "高价治疗一旦中断，患者可能永久转往其他药房。", "k155": "归因确实困难——不要仅凭这一点来做商业论证。", "k156": "<b>承接更多业务的能力</b>", "k157": "收回的工时可以承接更多专科处方，而无需增加人手。", "k158": "只有在本地确实存在需求时，才会转化为收入。", "k159": "<b>降低关键人员风险</b>", "k160": "特殊授权的经验不再只掌握在某一位资深员工手中。", "k161": "体现为组织韧性，而不是账面上的某一项数字。", "k162": "<i class=\"fas fa-scale-balanced\" style=\"margin-right:9px\"></i> <b>我们的立场：</b>商业论证应建立在人力时间上——它可衡量、经得起追问。减少拒赔、避免授权失效与患者留存，应作为有待验证的额外收益。把这些直接写进标题数字的供应商，其实是在猜。", "k163": "需要贵方提供什么", "k164": "<i class=\"fas fa-database\"></i>刻意保持精简的数据范围", "k165": "这是一个行政工作台，而不是临床病历系统。够用来跟踪案件即可，多余的一概不要。", "k166": "<i class=\"fas fa-check\"></i> 一宗案件所需的信息", "k167": "<b>去标识化的患者编号</b> —— 由贵方患者 ID 转换而来", "k168": "<b>药物、DIN、剂型</b> —— 来自贵方系统中已有的处方", "k169": "<b>保险方、计划、覆盖类别</b> —— 来自保险卡", "k170": "<b>处方医生诊所联系方式</b> —— 用于催取文件", "k171": "<b>案件负责人</b> —— 由贵方指派", "k172": "<b>关键日期</b> —— 提交、预计回复、批准、到期", "k173": "<b>授权编号</b>以及<b>已收到的文件</b>", "k174": "一次性设置：门店、团队成员及其角色、以及贵方希望的提前提醒天数。<b>覆盖规则由我方维护并经人工审核</b>——贵方直接使用，无需自行整理。", "k175": "<i class=\"fas fa-ban\"></i> 我们刻意不需要的数据", "k176": "不需要诊断、症状或临床记录作为数据字段", "k177": "不需要化验值、生命体征或临床评分", "k178": "日常操作界面中不出现患者姓名", "k179": "不需要发药历史、依从性或补药规律", "k180": "不与贵方发药系统连接——不回写任何数据，也不传输任何理赔", "k181": "<b>这是刻意设计，而非功能缺失。</b>尽量不接触可识别的临床数据，使该功能严格保持在行政范畴，也让隐私合规讨论比临床系统简单得多——适用《PIPEDA》及相应省级法规（阿尔伯塔省 <i>HIA</i>、安大略省 <i>PHIPA</i>、卑诗省 <i>PIPA</i>）。最终的合规评估仍由贵方隐私负责人与法律顾问承担。", "k182": "<b>起步很轻。</b>只需录入目前在办的案件即可，历史数据并非必需。<b>与药房管理系统（Kroll、PharmaClik Rx）的集成是路线图上的下一个里程碑，而不是「或许」</b>：它将消除重复录入，并打通「批准 → 计费」的闭环。价值在集成之前就已开始——并随集成而放大。", "k183": "边界与安全", "k184": "<i class=\"fas fa-shield-halved\"></i>AlgoPharma 不做什么", "k185": "我们把话说明白，因为这决定了采用本功能的风险边界——而且合作方理应先从我们这里听到。", "k186": "<b>不</b>做诊断、不解读症状、不评估临床适用性", "k187": "<b>不</b>推荐药物、不建议换药、不提供剂量意见", "k188": "<b>不</b>自动续方，也<b>不</b>自动联系处方医生", "k189": "<b>不</b>批准保险、不裁定理赔、不保证报销", "k190": "<b>不</b>取代贵方管理系统、保险方门户或提交渠道", "k191": "<b>不</b>取代药剂师或医生的专业判断", "k192": "最终的临床决定仍由<b>处方医生与药剂师</b>作出；最终的报销决定仍由<b>保险方</b>作出。<br/> AlgoPharma 只负责把周边的行政工作组织好。", "k193": "规则经人工审核", "k194": "每条规则都附带版本、生效日期与具名审核人", "k195": "助手会拒答临床问题", "k196": "药物选择、换药与剂量问题一律转交药剂师", "k197": "全篇措辞审慎", "k198": "「可能需要」——绝不承诺一定获得覆盖", "k199": "如何验证", "k200": "<i class=\"fas fa-flask-vial\"></i>在贵药房自行验证这些数字", "k201": "一次 60 天的试点只需四项测量，其中三项由该功能自动产出。", "k202": "第 1 步 · 贵方", "k203": "先做两周基线记录", "k204": "记录特殊授权案件的处理时长；统计在办案件数、等待文件的案件数，以及去年失效的授权数量。", "k205": "第 2 步 · 自动", "k206": "建档 → 提交", "k207": "一宗案件需要多久才能凑齐材料并成功提交。", "k208": "第 3 步 · 自动", "k209": "提交 → 决定", "k210": "保险方的处理周期，以及其中有多少时间其实是在等贵方。", "k211": "第 4 步 · 自动", "k212": "一次性提交完整率", "k213": "无需再补交「需补充材料」的提交占比。", "k215": "<i class=\"fas fa-circle-check\"></i> 可现场完整演示", "k218": "覆盖信息、文件、任务、跟进、到期与审计——整合进同一套工作流，并与贵药房现有工具并行使用。", "k219": "小型药房<br/>每月 20 宗案件", "k220": "中型药房<br/>每月 50 宗案件", "k221": "大型 / 连锁<br/>每月 100 宗案件", "k222": "按每小时 $25 计算的年度人力成本回收 · 为测算数字，需在试点中验证", "k223": "<i class=\"fas fa-rotate-left\"></i> 回到顶部", "k224": "AlgoPharma 提供保险覆盖信息与药房行政工作流支持，不提供诊断、治疗、处方、剂量、换药或临床适用性方面的建议。最终临床决定由处方医生与药剂师作出，最终报销决定由保险方作出。文中所有数字均为基于既定假设的示意测算；本演示仅使用合成数据。", "k225": "药房本来就在做的<br/>保险工作——<br/><span style=\"color:var(--primary)\">从此有序。</span>", "k226": "每宗案件从 <span style=\"color:var(--danger)\">40 分钟</span><br/>降到 <span style=\"color:var(--ok)\">2–3 分钟</span>。", "k227": "小型", "k228": "中型", "k229": "大型 / 连锁", "k300": "覆盖与可及性", "k301": "案件工作台", "k302": "授权生命周期", "k303": "<i class=\"fas fa-circle\"></i> 合成演示", "k304": "—— CASE-2026-1043 · Drug C · 阿尔伯塔省公共计划（合成）", "k305": "DRUG C · 公共计划（阿尔伯塔省）· 合成数据", "k306": "可能需要特殊授权", "k307": "根据现有演示规则，该药物可能需要特殊授权，并需专科医生参与。", "k308": "文件清单", "k309": "特殊授权表", "k310": "专科会诊函", "k311": "基线化验报告", "k312": "患者同意书", "k313": "已在档", "k314": "待收集", "k315": "4 份文件中已有 2 份 —— 文件到位后自动更新", "k316": "规则来源与核验", "k317": "来源", "k318": "阿尔伯塔省合成专科用药标准", "k319": "规则版本", "k320": "生效日期", "k321": "最后人工审核", "k322": "审核人", "k323": "合规团队", "k324": "<i class=\"fas fa-user-check\"></i> 已核验的演示规则", "k325": "<i class=\"fas fa-scale-balanced\"></i> 结果取决于患者资格、计划条款及保险方的最终裁定 —— 仅为行政信息，不构成临床建议。", "k326": "特殊授权案件工作台", "k327": "—— 24 宗在办案件 · 可在阶段间拖拽 · 仅使用去标识化编号", "k328": "资料收集中", "k329": "等待医生", "k330": "待提交", "k331": "保险方审核中", "k332": "<i class=\"fas fa-triangle-exclamation\"></i> 缺少文件", "k333": "<i class=\"fas fa-calendar-xmark\"></i> 授权 ≤30 天到期", "k334": "<i class=\"fas fa-circle-check\"></i> 正常", "k335": "<i class=\"fas fa-bell\"></i> 回复已超期", "k336": "<i class=\"fas fa-forward-step\" style=\"color:var(--primary)\"></i> 经由现有渠道提交", "k337": "已停留 5 天", "k338": "已停留 7 天", "k339": "已停留 9 天", "k340": "已停留 3 天", "k341": "已停留 19 天", "k342": "<i class=\"fas fa-hand-pointer\" style=\"color:var(--primary)\"></i> 每张卡片都标注当前最主要的风险 —— 悬停可查看完整详情。界面从不显示患者姓名。", "k343": "—— CASE-2026-1044 · Drug B · SYN-AUTH-88213", "k344": "<i class=\"fas fa-shield-halved\"></i> <b>行政授权风险 —— 需药剂师或处方医生复核。</b>系统不会自动续期，也不会自动联系处方医生。", "k345": "30 天内到期", "k346": "授权将于 <b style=\"color:var(--ink)\">2026 年 9 月 2 日</b> 到期 · 剩余 23 天", "k347": "已批准", "k348": "已记录到期日", "k349": "90 天提醒", "k350": "60 天任务", "k351": "30 天升级提醒", "k352": "已提交重新授权", "k353": "已排期的重新授权工作", "k354": "启动重新授权准备", "k355": "索取更新的医生证明函", "k356": "提交重新授权材料", "k357": "自动", "k358": "其他存在风险的授权", "k400": "哪些授权将在 30 天内到期？", "k401": "找到 3 个", "k402": "技师 —— 不可更改案件状态", "k403": "药剂师 —— 记录批准结果", "k405": "保险方确认已收到", "k406": "医生诊所要求再发一份", "k408": "状态变更：待提交 → 已提交", "k409": "已上传特殊授权表（v2）", "k410": "在办案件状态分布", "k420": "状态只存在于最后经手的那个人那里。患者往往要先打给药房、再打给诊所、最后打给保险方才能问到进展——而每一通电话都要把来龙去脉重新拼凑一遍。", "k421": "各保险方、各计划的要求都不一样，缺口通常要等几周后收到拒赔或「需补充材料」的信函才暴露——然后流程时钟从头再来。", "k422": "工作落在传真落到的地方。案件一旦属于「整个团队」，交接班之间下一步就会悄悄丢失——直到患者打电话来问。", "k423": "保险方很少主动通报延误——公共特殊授权的排队有时长达数周<sup><a href=\"#sources\">10</a></sup>。没有记录在案的预计回复日期，催办只能靠某个人碰巧想起。", "k424": "没有人会提醒你时限已到。到期日躺在归档的批准函里，而需要数周准备的续期工作，往往要等理赔在柜台被拒之后才开始。", "k425": "一张传真回执常常是唯一凭证。当保险方说「没收到」时，只能拿记忆去对他们的记录——于是材料重发一遍，等待重新开始。", "k430": "6 分钟", "k440": "<i class=\"fas fa-wand-magic-sparkles\"></i> 新功能 —— 属于现有的 AlgoPharma 平台，而非另一个新系统", "k450": "<i class=\"fas fa-cash-register\"></i>柜台理赔被拒 → 一键建案", "k451": "<i class=\"fas fa-keyboard\"></i>PMS 任务 —— 授权号 + 试单", "k452": "<b>两个我们不含糊的细节：</b>在阿尔伯塔省，公共计划的特殊授权申请由<b>处方医生</b>填写并签署<sup><a href=\"#sources\">1</a></sup>，多数私人保险的预先授权表格同样须由医生完成<sup><a href=\"#sources\">4</a></sup>——AlgoPharma 负责备齐材料、跟踪交接并记录结果，绝不代任何一方提交。而当批准送达时，系统会生成一项收尾任务，提示团队<b>把授权号录入 PMS 并进行试单</b>——正是这一步，让批准真正变成能付款的理赔。", "k453": "为什么今天没人做这件事", "k454": "<i class=\"fas fa-chess-board\"></i>身边的工具各握一块拼图——没有谁在管整宗案件", "k455": "这是加拿大市场的真实竞争图景——也正因如此，这个缺口才一直存在。", "k456": "药房目前依赖的工具", "k457": "它确实擅长的", "k458": "它没有覆盖的", "k459": "<b>PMS 内置功能</b><br/><span style=\"font-size:.74rem;color:var(--muted)\">Kroll · PharmaClik Rx</span>", "k460": "可记录授权号、备注与理赔裁定；可批量发起续方授权申请<sup><a href=\"#sources\">8</a></sup>", "k461": "没有案件阶段、没有按保险方生成的文件清单、没有按到期日驱动的工作队列——案件本身活在系统之外", "k462": "<b>保险方门户</b><br/><span style=\"font-size:.74rem;color:var(--muted)\">Alberta Blue Cross · Sun Life · Canada Life…</span>", "k463": "查询已提交申请的状态、下载正确的表格<sup><a href=\"#sources\">3</a></sup>", "k464": "一个门户只对应一家保险方——没有任何工具能把药房在公共计划与各家私人保险的案件汇总到一处", "k465": "<b>现状组合</b><br/><span style=\"font-size:.74rem;color:var(--muted)\">表格 + 传真 + 便签 + 记忆</span>", "k466": "灵活、熟悉、免费——确实「能跑通」", "k467": "但它正是前文的失败模式：反复重建案情、关键人员风险、到柜台才发现授权失效", "k468": "<b>美国 ePA 平台</b><br/><span style=\"font-size:.74rem;color:var(--muted)\">CoverMyMeds 等</span>", "k469": "证明了这个品类成立——全国规模的电子预先授权，面向处方端<sup><a href=\"#sources\">9</a></sup>", "k470": "建立在美国标准与美国支付方之上——不涉及加拿大公共计划的特殊授权", "k472": "<b>这对壁垒意味着什么：</b>真正可积累的资产是<b>工作流本身</b>与<b>经人工审核的规则库</b>——以及路线图上的下一步：<b>PMS 集成</b>（Kroll、PharmaClik Rx），它将消除重复录入、打通「批准 → 计费」的闭环。我们把它明说出来，因为它是仅次于工作流的最大杠杆，而不是一句脚注。", "k473": "申诉时限可配置", "k474": "公共计划的重审与各家私人保险的申诉流程节奏各不相同<sup><a href=\"#sources\">4,10</a></sup>——时限按保险方逐一配置，绝不写死。", "k475": "结案归档，而非消失", "k476": "阿尔伯塔省药房须将患者记录保存至最后一次服务后 10 年<sup><a href=\"#sources\">2</a></sup>。结案案件连同完整审计轨迹转入只读归档，并与贵方保留政策对齐。", "k477": "先做阿尔伯塔——并且明说", "k478": "规则库首先围绕 Alberta Blue Cross 特殊授权构建。安大略省的 EAP 与 Limited Use 是另一套体系<sup><a href=\"#sources\">10</a></sup>，将作为独立的落地项目——我们不会假装一个省的规则能悄悄泛化到全国。", "k479": "<i class=\"fas fa-book\"></i> 资料来源", "k480": "<a href=\"https://www.alberta.ca/drug-benefit-list-and-drug-review-process\" target=\"_blank\" rel=\"noopener\">Alberta.ca —— 药物福利清单与药物审核流程</a>：公共计划下的特殊授权申请由处方医生填写。", "k481": "<a href=\"https://abpharmacy.ca/wp-content/uploads/RecordRetentionChart.pdf\" target=\"_blank\" rel=\"noopener\">阿尔伯塔药学院（ACP）—— 记录保存对照表</a>：患者记录须保存至最后一次药房服务后 10 年（标准 8.8）。", "k482": "<a href=\"https://www.ab.bluecross.ca/provider/type/pharmacy/home.php\" target=\"_blank\" rel=\"noopener\">Alberta Blue Cross —— 药房服务提供方页面</a>：按保险方逐一查询特殊授权状态的渠道。", "k483": "<a href=\"https://www.sunlife.ca/en/support/finding-documents-and-forms/prior-authorization-forms/\" target=\"_blank\" rel=\"noopener\">Sun Life —— 预先授权表格</a>：表格由医生填写；申请在五个工作日内审核。", "k484": "<a href=\"https://www.canadalife.com/content/dam/canadalife/documents/forms/you-and-your-family/1-0-employer/1-3-request-an-assessment/1-3-2-prior-auth-drugs/en/glp1-m6453.pdf\" target=\"_blank\" rel=\"noopener\">Canada Life —— 药物预先授权表格</a>：表格不完整会延误审核——正是本功能要避免的返工循环。", "k485": "<a href=\"https://www.cmaj.ca/content/195/46/E1565\" target=\"_blank\" rel=\"noopener\">《加拿大医学会杂志》（CMAJ，2023）—— 加拿大厂商患者支持项目研究</a>：约十分之一上市药物设有 PSP，多数提供报销导航与过渡供药。", "k486": "<a href=\"https://abpharmacy.ca/regulated-members/practice-resources/need-to-know/clarifying-prescribing-authority-for-pharmacists/\" target=\"_blank\" rel=\"noopener\">阿尔伯塔药学院（ACP）—— 药剂师处方权说明</a>：全省药剂师均可在紧急情况下开具处方；属有限的例外授权。", "k487": "<a href=\"https://www.pharmacytechnologysolutions.ca/pharmaclik-rx-doc/Content/Resources/PDFs/PharmaClik%20Rx%202.6%20Release%20Documentation.pdf\" target=\"_blank\" rel=\"noopener\">McKesson —— PharmaClik Rx 文档</a>及<a href=\"https://www.telus.com/en/health/health-professionals/pharmacies/kroll\" target=\"_blank\" rel=\"noopener\">TELUS Health —— Kroll</a>：PMS 的强项是配药、理赔裁定与批量续方授权申请，而非跨保险方的案件管理。", "k488": "<a href=\"https://www.covermymeds.com/main/support/general/what-is-electronic-prior-authorization/\" target=\"_blank\" rel=\"noopener\">CoverMyMeds —— 什么是电子预先授权</a>：基于 NCPDP SCRIPT 标准的美国 ePA。", "k489": "<a href=\"https://www.ontario.ca/page/applying-exceptional-access-program\" target=\"_blank\" rel=\"noopener\">安大略省 —— Exceptional Access Program</a>：由处方医生经 SADIE 或传真提交；决定需 3 天至 6 周——与阿尔伯塔省特殊授权是不同的体系。"};
+const EN = {};
+document.querySelectorAll('[data-i18n]').forEach(el => {
+  const k = el.dataset.i18n;
+  if (!(k in EN)) EN[k] = el.innerHTML;   // capture the authored English once
+});
+
+const LANG_TEXT = {
+  en: { title: 'AlgoPharma — Partner Showcase',
+        labels: ['Overview','The problem','The workflow','Capability 1','Capability 2',
+                 'Time per case','Annual savings','Beyond the hours','The landscape','Data needed',
+                 'Boundaries','Pilot','Summary'] },
+  zh: { title: 'AlgoPharma — 合作伙伴介绍',
+        labels: ['概览','当前问题','工作流','核心能力 1','核心能力 2',
+                 '每宗案件耗时','年度节省','时间之外','行业现状','所需数据',
+                 '边界说明','试点验证','总结'] }
+};
+
+function setLang(lang) {
+  const dict = lang === 'zh' ? ZH : EN;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = dict[el.dataset.i18n];
+    if (v !== undefined) el.innerHTML = v;      // untranslated keys keep their current text
+  });
+  document.documentElement.lang = lang;
+  document.title = LANG_TEXT[lang].title;
+  dots.forEach((d, n) => { d.dataset.label = LANG_TEXT[lang].labels[n] || ''; });
+  document.querySelectorAll('#lang button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+  try { localStorage.setItem('algopharma-lang', lang); } catch (e) { /* private mode */ }
+  levelDataFeet();
+  onScroll();   // section offsets shift when text reflows
+}
+
+// Language is driven by the URL alone: .../chinese serves the Chinese version
+// (also accepts ?chinese and #chinese for direct-file use). Everything else is English.
+if (/\/chinese(?:\/|$)/i.test(location.pathname) || /chinese/i.test(location.search + location.hash)) setLang('zh');
+
+// ===== product-UI carousel on the cover =====
+const HC_DELAY = 5000;
+let hcIdx = 0, hcTimer = null, hcHover = false;
+const hcReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function hcGo(n, manual) {
+  const s = document.querySelectorAll('.hc-slide');
+  if (!s.length) return;
+  hcIdx = (n + s.length) % s.length;
+  s.forEach((el, i) => el.classList.toggle('on', i === hcIdx));
+  document.querySelectorAll('#hcDots button').forEach((d, i) => d.classList.toggle('on', i === hcIdx));
+  document.querySelectorAll('#hcTabs .hc-tab').forEach((t, i) => t.classList.toggle('on', i === hcIdx));
+  if (manual) hcRestart();
+}
+function hcTick() {
+  const hc = document.getElementById('hc');
+  // only animate while the cover is actually on screen
+  const r = hc.getBoundingClientRect();
+  if (hcHover || r.bottom < 0 || r.top > window.innerHeight) return;
+  hcGo(hcIdx + 1);
+}
+function hcRestart() { clearInterval(hcTimer); if (!hcReduced) hcTimer = setInterval(hcTick, HC_DELAY); }
+function hcPause() { hcHover = true; }
+function hcResume() { hcHover = false; }
+requestAnimationFrame(() => document.getElementById('hc').classList.add('in'));
+hcRestart();
+
+levelDataFeet();
+onScroll();
+</script>
+</body>
+</html>
